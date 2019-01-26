@@ -6,6 +6,7 @@ using namespace std;
 const int UNCACHED = -1000000;
 // should be lower than maximum sequence length * 2
 const int TERRIBLE_SCORE = -(1 << 16); 
+// match_score should be the only positive score, everything else should be negative
 const int
 deletion_score = -1,
 gap_score = -1,
@@ -58,16 +59,6 @@ int align_original(string &temp,string &sequence, vector<vector<int> > &cache)
     return result;
 }
 
-// original align with optimization - if current character matches, return match result
-// without even trying deleteion or gap
-// reasoning:
-// let the strings be Tc Sc (some prefixes T,S and ending with the same character c)
-// can a higher alignment score be achieved by choosing a gap or delete in this step?
-// if we choose some number of gaps, followed by a deletion (or some number of deletions followed by a gap)
-// then whatever alignment score is reached thanks to that, we could improve by appending the match from this step to it
-// if we choose some number of gaps/deletions followed by a match, we can just as well match the current character  
-// and gap/delete that one instead
-// hence we (should) never get a higher alignment score through a delete or a gap.
 int align_original_greedy_match(string &temp,string &sequence, vector<vector<int> > &cache)
 {
     //calls++;
@@ -117,16 +108,7 @@ int align_original_greedy_match(string &temp,string &sequence, vector<vector<int
     return result;
 }
 
-// optimisation: prune recursive search tree by the following limitation:
-// if I am in state [T,S] and I found some alignment with score K
-// then any other searches (e.g. we found alignment through match_mismatch but want to try delete or gap)
-// need to get a score higher than K for the search to have any effect on the result
-// As such, each call is given a 'get_at_least' value - the caller indicates that if this score can not be obtained
-// there is no point in searching deeper, as any result will eventually be discarded anyway.
-// The first call is given a get_at_least value of 'TERRIBLE_SCORE', meaning that only actual alignment scores that
-// were obtained during the search place a restriction on the search 
-// (otherwise a bad alignment may cache a 'terrible' value at some state, and a future better-aligned call will 
-// use this invalid value in its computation, lowering an actual score which could have been used)
+
 int align_get_at_least(string &temp,string &sequence, vector<vector<int> > &cache, int get_at_least = TERRIBLE_SCORE)
 {
 	//calls++;

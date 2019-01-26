@@ -1,1 +1,103 @@
- 
+A parsable list of attempted optimizations (resp. changes)
+(compared to original athttps://github.com/picrin/science_of_alignment/blob/master/variant_repeat_algorithm.ipynb)
+
+General:
+
+- Switch from Python to C++
+
+- produce_sequences eliminates duplicates
+
+Generic align function:
+
+- no longer returns the string which best matched the given state.
+We know the sequence/template arguments for the top-level align call
+and can score the corret template accordingly. Internal information is unnecessary
+
+- as C++ handles string operations differently, to maintain efficiency, we match the sequence-template
+pair from the right as opposed to the left; this way the strings required for a deeper recursive call
+are ones with the rightmost character removed from the sequence-template pair, which can be done in O(1)
+directly to the original strings, which can be passed by reference to the recursive call, and then returned
+back to original state in O(1). This way N recursive calls only take O(N) operations on the parameters.
+
+- instead of a (sequence, template) : result mapping, we utilize the fact that 
+(as all characters are removed from the right) the lengths of the sequence and template by itself uniquely identify the state
+of the DP, and so a [sequence size+1][template size+1] integer array can be used as the cache instead (with value being
+best found alignment score)
+
+- instead of sorting the three results, a simple max() is way faster
+
+Specific align functions:
+
+	align_original:
+		simply the original python rewritten to C++ along with all 'generic' optimisations
+		(test: align_original.txt)
+
+	align_original_greedy_match:
+		if current character matches, return match result without even trying deletion or gap
+	 	reasoning:
+		let the strings be Tc Sc (some prefixes T,S and ending with the same character c)
+		can a higher alignment score be achieved by choosing a gap or delete in this step as opposed to match?
+		if we choose some number of gaps (i.e. gap in this step and 0-or-more gaps right after),
+		followed by a deletion then whatever alignment score is reached thanks to that, 
+		we could improve it by appending the match from this step to it
+		(some number of deletions followed by a gap analogous)
+		if we instead choose some number of gaps/deletions followed by a match, we can just as well match the current character  
+		and gap/delete the one matched in the gaps/deletions call 
+		i.e. if from (TcXc, Sc) we do some gaps to get to (Tc,Sc) and then match c to get (T,S),
+		we can instead match c immediately to get (TcX,S), then do the same number of gaps as in the above case to get (T,S)
+		with the same score.
+
+		this optimisation does not alter any scores compared to original in a randomized 20-vs-20 test
+		(test: align_original_greedy_match.txt)
+
+	align_get_at_least:
+		we note that a significant number of searched states will be pointless, in that we obtain them by only making
+		terrible decisions (e.g. choosing gap every other step) and the computed values will be discarded in opposition to
+		solutions which went a 'sensible' route. We attempt to prune such branches from our recursive search.
+
+		Each align call has a get_at_least parameter, with the following meaning: the result you compute will only matter
+		to the caller if it will be at least get_at_least. As such, if even in the best case the score will be less,
+		don't bother with the search and just return a failure.
+
+		This parameter is passed to each of the three recursive calls (- the score that step provides, 
+		e.g. if get_at_least = 10 and we do a gap worth -1 points, the recursive call will need to get at least a score of 11),
+		and updated on the fly (e.g. if get_at_least = 10 but the match recursive call returns a score of 20,
+		the delete call will be given 20, similarly if that improves it yet again, gap gets that value)
+
+		The top-level call sets this parameter to a terrible, negative value, so only actually legitimate get_at_least values
+		that were computed at some point will be used for pruning.
+
+		Unfortunately, even though we know that (on real data where sequences have length > 1000) we expect close matches with score
+		of 700-900 (have never seen anything under 500), we cannot initialize the top-level call with a larger get_at_least value
+		for the following reason: if a recursive branch makes bad decisions, in such a way that we end up in a position where none
+		of the three options give us the get_at_least value (originaly equal to some lower threshold, e.g. 300), the cached result 
+		for this state will be this faulty value composed of the three branches all returning failures 
+		(maybe from their own, nested calls). If a more 'sensible' call then reaches the same state (i.e. it made 'sensible'
+		decisions and has achieved most of its get_at_least value already, so it now only = 10), it will return this invalid,
+		terrible score, and so this propagates upwards (usually from multiple branches of a high-level call), significantly
+		lowering the eventual best alignment score found.
+
+		it is not however perfect, and Hodobox doesn't know why the following test results are what they are:
+
+		test: align_GAL_best_score_optimistic.txt calculates a unnecessarily high (optimistic) estimate of the best
+		possible score obtainable from the state (template,sequence): match_score * minimum(template length, sequence length)
+		(i.e. what if every character matched, and the rest of the longer string was then simply discarded).
+		This produces a different result in the 20-vs-20 test compared to align_original, in that several (10-ish)
+		(template,sequence) pairs are given a score of exactly 1 less. This should be completely insignificant compared to the
+		usual 700-900 scores the pairs receive (and so shouldn't change even the result order), yet it is unclear how this arises.
+
+		test: align_GAL_best_score_realistic.txt calculates a realistic estimate of the best possible score:
+		match_score * minimum(template_length, sequence length) + maximum(gap_score, delete_score) * (difference in string sizes)
+		(i.e. every character matched, and the rest of the longer string was removed with the least-negative bad score)
+		This produces a difference in 1 or 2 points, for a significant portion of (template,sequence) pairs. As is, it should
+		still have no-or-insignificant effect on the resulting scores table, but the origin of this discrepancy is once again
+		unbeknownst to me (as unless there is a mistake in my logic, no state should be able to receive the score used in 
+		align_GAL_best_score_optimistic anyway)
+
+		and finally, for some reason combining this optimization with greedy_match produces abysmal results 
+		(scores often drop by more than 20 points in a (template,sequence) pair). These optimizations should not
+		have any cross-effect on each other (one prunes the search space of pointless calls, one relies on the fact
+		that taking a match is always optimal) and yet it does, to a level where they can not be used together.
+		Which would be very nice, as on their own they both significantly decrease the runtime.
+		(test: align_GAL_greedy_match_BAD_RESULT.txt)
+
