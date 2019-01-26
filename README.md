@@ -8,3 +8,5 @@ Notable project files:
 - code/ contains... the code
 - sequences/ contains sample DNA sequences (see real.txt)
 - test/ contains output of testing different optimisations (parameters of test, all scores obtained, and finally resulting times)
+
+All tests were done on a single core of a intel i7-5500U CPU @ 2.40GHz
