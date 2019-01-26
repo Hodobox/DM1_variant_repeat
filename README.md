@@ -7,4 +7,4 @@ Notable project files:
 - pyth_orig/ contains the original python implementation from https://github.com/picrin/science_of_alignment/blob/master/variant_repeat_algorithm.ipynb
 - code/ contains... the code
 - sequences/ contains sample DNA sequences (see real.txt)
-- test/ contains output of testing different optimisations
+- test/ contains output of testing different optimisations (parameters of test, all scores obtained, and finally resulting times)
