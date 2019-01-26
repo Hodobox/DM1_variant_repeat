@@ -1,3 +1,5 @@
+# quick script to re-write sequences from source file to more readily usable .txt
+
 sequences = []
 
 with open('sequences/githubdata.fasta','r') as data:

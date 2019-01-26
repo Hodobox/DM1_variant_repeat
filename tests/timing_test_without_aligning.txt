@@ -1,3 +1,5 @@
+FEW RANDOM CACHE ACCESSES AND RETURN RANDOM WAS PLACED AT TOP OF ALIGN
+IN ORDER TO TIME OUT-OF-ALIGN TIME TAKEN BY TEST
 Testing 20 sequences against 20 templates
 Time for pattern generation: 28109 ms
 Template 0, sequence 0 = 1852060

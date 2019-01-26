@@ -2,12 +2,16 @@
 #include <cmath>
 #include "align.cpp"
 #include "produce_seq.cpp"
+#include "miscelaneous.cpp"
 #include <fstream>
 #include <random>
 
 #include <chrono>
 using namespace std;
 
+
+// have not tested
+// might want to replace align_original with faster implementation if its going to be used
 pair<int,string> produce_sequence_and_align(vector<string> pattern, string temp)
 {
     vector<string> sequences = produce_sequences_outer(pattern, temp.size());
@@ -16,12 +20,13 @@ pair<int,string> produce_sequence_and_align(vector<string> pattern, string temp)
     for(string seq : sequences)
     {
     	vector<vector<int> > cache(seq.size()+1,vector<int>(temp.size()+1,UNCACHED));
-    	results.push_back({align(seq,temp,cache),seq});
+    	results.push_back({align_original(seq,temp,cache),seq});
     }
     sort(results.begin(),results.end());
     return results.back();
 }
 
+// have not tested
 vector<pair<int,string> > collapse_sequence(vector<string> pattern,string sequence)
 {
     vector<pair<int,string> > answer;
@@ -38,6 +43,7 @@ vector<pair<int,string> > collapse_sequence(vector<string> pattern,string sequen
     return answer;
 }
 
+// replace align_original with faster implementation if its going to be used
 vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, vector<string> &sequences)
 {
     int lensum = 0; for(string &seq : sequences) lensum += seq.size();
@@ -51,7 +57,7 @@ vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, 
         for(string &seq : sequences)
         {
         	vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(seq.size()+1,UNCACHED));
-            scores[i].first += align2(candidate_patterns[i], seq, cache);
+            scores[i].first += align_original(candidate_patterns[i], seq, cache);
         }
     }
 
@@ -60,6 +66,7 @@ vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, 
     return scores;
 }
 
+// for testing purposes
 vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &sequences, int test_against)
 {
     int lensum = 0; for(string &seq : sequences) lensum += seq.size();
@@ -85,7 +92,7 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
         {
         	string seq = sequences[k];
         	vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(seq.size()+1,UNCACHED));
-            int score = align(candidate_patterns[i], seq, cache);
+            int score = align_get_at_least(candidate_patterns[i], seq, cache);
             cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
             scores[i].first += score;
         }
@@ -103,7 +110,7 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
 
 void test_seqs(int n = 20, int test_against = 20)
 {
-	ifstream data("sequences/real.txt");
+	ifstream data("../sequences/real.txt");
 
 	int num_sequences;
 	data >> num_sequences;
@@ -128,49 +135,15 @@ int main()
 	srand(47);
 	test_seqs(20,20);
 	return 0;
-    /*vector<string> pattern = {"AA","ABA","BB"};
-    vector<string> seqs = produce_sequences_outer(pattern,7);
-    for(string &s:seqs)
-        cout << s << "\n";
-
-    vector<string> reads = {"AAABABB", "AACBABB", "AABBABB", "AAABBBB", "AAABAB"};
-    vector<pair<int,string> > result = best_templates_from_raw_reads(pattern, reads);
-    for(auto r: result)
-    	cout << r.first << " " << r.second << "\n";*/
-
-	//string smallsequence = "GCTGTTGCTG";
-	//string smallcandidate= "CTGCTGCTGC";
-	//vector<vector<int> > smallcache(smallcandidate.size()+1,vector<int>(smallsequence.size()+1,UNCACHED));
-	//cout << align2(smallcandidate,smallsequence,smallcache) << " small score\n";
-	//return 0;
-
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};
 	string sequence = "GCTGTTGCTGCTGCTTGCTGCTGCTTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCATGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCT";//GCTGCTGCTGCTGCTGTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGATGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCCGCTGCCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCCGCTGCGCTGCGCTGCGCTGCCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCGCTGCCGCTGCCGCAGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCT";
 	//cin >> sequence;
 	vector<string> candidate_templates = produce_sequences_outer(biopattern, sequence.size());
-	cout << candidate_templates.size() << " len " << sequence.size() << "\n";
+	cout << candidate_templates.size() << " candidates, sequence len " << sequence.size() << "\n";
 
-	/*set<long long> prefixhashes;
-
-	for(string &pat : candidate_templates)
-	{
-		long long mod[] = {1000000007,1000000009}, base[] = {313,317},hashes[]={0,0};
-		for(int i=0;i<pat.size();++i)
-		{
-			for(int k=0;k<2;++k)
-			{
-				hashes[k] = hashes[k]*base[k] + pat[i];
-				hashes[k] %= mod[k];
-			}
-			prefixhashes.insert(hashes[0]*mod[1]+hashes[1]);
-		}
-	}
-
-	cout << prefixhashes.size() << " unique prefixes\n";*/
-	
 	vector<vector<int> >  cache(candidate_templates[0].size()+1,vector<int>(sequence.size()+1,UNCACHED));
 	auto start = chrono::steady_clock::now();
-	cout << align2(candidate_templates[0], sequence, cache) << " best align score\n";
+	cout << align_get_at_least(candidate_templates[0], sequence, cache) << " best align score\n";
 	auto end = chrono::steady_clock::now();
 }

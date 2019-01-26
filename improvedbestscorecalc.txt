@@ -1,5 +1,0 @@
-Testing 20 sequences against 20 templates
-Time for pattern generation: 24816 ms
-Time sum for alignments: 13207 ms
-Time per alignment: 33 ms
-best align 20087

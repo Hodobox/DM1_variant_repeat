@@ -1,5 +1,12 @@
+# copied from https://github.com/picrin/science_of_alignment/blob/master/variant_repeat_algorithm.ipynb
+
+# notable changes:
+# produce_sequences_outer passes result throught a set (to eliminate dupliactes)
+# alignment is only done once (original called it twice for no reason, it simply doubled scores)
+
+
 import sys
-sys.setrecursionlimit(2048)
+sys.setrecursionlimit(4096)
 deletion_score = -1
 gap_score = -1
 mismatch_score = -1
@@ -118,7 +125,7 @@ candidate_templates = list(sorted(candidate_templates))
 
 start = time.time()
 print(align(candidate_templates[0], sequence))
-print(lensum)
+#print(lensum)
 stop = time.time()
 
 single_alignment = stop - start

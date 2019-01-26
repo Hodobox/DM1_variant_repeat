@@ -1,5 +1,5 @@
 Testing 20 sequences against 20 templates
-Time for pattern generation: 25702 ms
+Time for pattern generation: 24684 ms
 Template 0, sequence 0 = 897
 Template 0, sequence 1 = 936
 Template 0, sequence 2 = 861
@@ -400,6 +400,6 @@ Template 19, sequence 16 = 834
 Template 19, sequence 17 = 891
 Template 19, sequence 18 = 857
 Template 19, sequence 19 = 806
-Time sum for alignments: 141825 ms
-Time per alignment: 354 ms
+Time sum for alignments: 54247 ms
+Time per alignment: 135 ms
 best align 20088
