@@ -1,11 +1,11 @@
-#include <iostream>
-#include <cmath>
 #include "align.cpp"
 #include "produce_seq.cpp"
 #include "miscelaneous.cpp"
+
+#include <iostream>
+#include <cmath>
 #include <fstream>
 #include <random>
-
 #include <chrono>
 using namespace std;
 
@@ -74,12 +74,13 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
 
     auto start = chrono::steady_clock::now();
 
-    vector<string> candidate_patterns = produce_sequences_outer(pattern, avg_sequence_length);
+    vector<string> candidate_patterns = produce_sequences_outer_faster(pattern, avg_sequence_length);
     vector<pair<int,string> > scores(candidate_patterns.size());
 
     auto end = chrono::steady_clock::now();
 
     cout << "Time for pattern generation: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
+    //cout << candidate_patterns.size() << " of length " << avg_sequence_length << "\n";
 
     random_shuffle(candidate_patterns.begin(),candidate_patterns.end());
 

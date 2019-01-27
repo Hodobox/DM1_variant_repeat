@@ -1,0 +1,3 @@
+Testing 20 sequences against 20 templates
+Time for pattern generation: 1073 ms
+42643 of length 1237
