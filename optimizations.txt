@@ -104,3 +104,8 @@ Specific align functions:
 		Which would be very nice, as on their own they both significantly decrease the runtime.
 		(test: align_GAL_greedy_match_BAD_RESULT.txt)
 
+	align_get_at_least_short:
+		16bit integers are enough for all values, so tried if replacing ints by int16s will be an improvement 
+		(perhaps with caching).
+		Nope.
+		(test: align_get_at_least_short)
