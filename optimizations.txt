@@ -7,6 +7,9 @@ General:
 
 - produce_sequences eliminates duplicates
 
+- produce_seq_faster - instead of merging results (which requires passing around vectors of generated sequences)
+we pass an outside container by reference and add them instead. Shortens pattern generation to ~1s.
+
 Generic align function:
 
 - no longer returns the string which best matched the given state.
