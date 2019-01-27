@@ -72,7 +72,7 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
     int lensum = 0; for(string &seq : sequences) lensum += seq.size();
     int avg_sequence_length = round( (double)lensum / sequences.size());
 
-	auto start = chrono::steady_clock::now();
+    auto start = chrono::steady_clock::now();
 
     vector<string> candidate_patterns = produce_sequences_outer(pattern, avg_sequence_length);
     vector<pair<int,string> > scores(candidate_patterns.size());
@@ -90,8 +90,8 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
         scores[i] = {0,candidate_patterns[i]};
         for(int k=0;k<sequences.size();++k)
         {
-        	string seq = sequences[k];
-        	vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(seq.size()+1,UNCACHED));
+            string seq = sequences[k];
+            vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(seq.size()+1,UNCACHED));
             int score = align_get_at_least(candidate_patterns[i], seq, cache);
             cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
             scores[i].first += score;
