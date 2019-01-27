@@ -7,6 +7,7 @@
 #include <fstream>
 #include <random>
 #include <chrono>
+#include <cstring>
 using namespace std;
 
 
@@ -91,16 +92,16 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
         scores[i] = {0,candidate_patterns[i]};
         for(int k=0;k<sequences.size();++k)
         {
-            string seq = sequences[k];
-            vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(seq.size()+1,UNCACHED));
-            int score = align_get_at_least(candidate_patterns[i], seq, cache);
+            vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(sequences[k].size()+1,UNCACHED));
+            //memset(cached,0,sizeof(cached));
+            //int score = align_get_at_least_array(candidate_patterns[i], sequences[k]);
+            int score = align_get_at_least(candidate_patterns[i],sequences[k], cache);
             cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
             scores[i].first += score;
         }
     }
 
     end = chrono::steady_clock::now();
-
     cout << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
     cout << "Time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (sequences.size() * test_against) << " ms\n";
 

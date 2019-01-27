@@ -9,6 +9,7 @@ General:
 
 - produce_seq_faster - instead of merging results (which requires passing around vectors of generated sequences)
 we pass an outside container by reference and add them instead. Shortens pattern generation to ~1s.
+(test: test_produce_seq.txt vs. test_produce_seq_faster.txt. equalness of both sets of templates was verified.)
 
 Generic align function:
 
@@ -112,3 +113,11 @@ Specific align functions:
 		(perhaps with caching).
 		Nope.
 		(test: align_get_at_least_short)
+
+	align_get_at_least_array:
+		instead of creating a brand-new  
+		vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(sequences[k].size()+1,UNCACHED))
+		for each (template,sequence) pair, a single global 2D array cached[1501][1501] is used.
+		for fast clearing between pairs, a 2D bool array is used to keep track of which states have been memoised,
+		and is memset before each top-level align. Surprisingly, there is a ~10% improvement compared to the vector version.
+		(test: align_get_at_least_array)
