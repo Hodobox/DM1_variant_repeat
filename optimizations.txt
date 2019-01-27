@@ -73,11 +73,14 @@ Specific align functions:
 		of the three options give us the get_at_least value (originaly equal to some lower threshold, e.g. 300), the cached result 
 		for this state will be this faulty value composed of the three branches all returning failures 
 		(maybe from their own, nested calls). If a more 'sensible' call then reaches the same state (i.e. it made 'sensible'
-		decisions and has achieved most of its get_at_least value already, so it now only = 10), it will return this invalid,
-		terrible score, and so this propagates upwards (usually from multiple branches of a high-level call), significantly
+		decisions and has achieved most of its get_at_least value already, so its now only = 10), it will return this invalid,
+		terrible score cached by the previous 'bad decision maker' which gave up without actually aligning 
+		the rest of the sequence, and so this propagates upwards 
+		(usually from multiple branches of a high-level call), significantly
 		lowering the eventual best alignment score found.
 
-		it is not however perfect, and Hodobox doesn't know why the following test results are what they are:
+		The original optimization is however imperfect, 
+		and Hodobox doesn't know why the following test results are what they are:
 
 		test: align_GAL_best_score_optimistic.txt calculates a unnecessarily high (optimistic) estimate of the best
 		possible score obtainable from the state (template,sequence): match_score * minimum(template length, sequence length)
