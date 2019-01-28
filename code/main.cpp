@@ -2,6 +2,8 @@
 #include "produce_seq.cpp"
 #include "miscelaneous.cpp"
 
+#include <omp.h>
+
 #include <iostream>
 #include <cmath>
 #include <fstream>
@@ -87,15 +89,17 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
 
     start = chrono::steady_clock::now();
     
+    #pragma omp parallel for ordered
     for(int i=0;i<test_against;i++)
     {
+        string candidate = candidate_patterns[i];
         scores[i] = {0,candidate_patterns[i]};
         for(int k=0;k<sequences.size();++k)
         {
             vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(sequences[k].size()+1,UNCACHED));
             //memset(cached,0,sizeof(cached));
             //int score = align_get_at_least_array(candidate_patterns[i], sequences[k]);
-            int score = align_get_at_least(candidate_patterns[i],sequences[k], cache);
+            int score = align_GAL_multithread(candidate_patterns[i],sequences[k], candidate_patterns[i].size(), sequences[k].size(), cache);
             cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
             scores[i].first += score;
         }

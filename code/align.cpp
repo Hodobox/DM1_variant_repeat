@@ -175,6 +175,60 @@ int align_get_at_least(string &temp,string &sequence, vector<vector<int> > &cach
     return result;
 }
 
+int align_GAL_multithread(string &temp,string &sequence, int tempsize,int seqsize, vector<vector<int> > &cache, int get_at_least = TERRIBLE_SCORE)
+{
+    //calls++;
+
+    // if one sequence is empty, we will have no choice but to gap/delete the rest
+    if(!tempsize)
+        return seqsize * deletion_score;
+    if(!seqsize)
+        return tempsize * gap_score;
+
+    // if we have computed the best alignment for template[0...current_size] , sequence[0....current_size], then return it
+    if(cache[tempsize][seqsize] != UNCACHED)
+        return cache[tempsize][seqsize];
+
+    // for the result of this recursive call to matter (improve the result for the caller)
+    // it would have to get at least get_at_least points
+    // in the best case, we match the entirety of the smaller string, and then gap/delete the leftover of the other
+    int best_score_possible = match_score * min(tempsize,seqsize) + max(deletion_score,gap_score) * abs(tempsize-seqsize);
+    if(best_score_possible < get_at_least)
+        return TERRIBLE_SCORE;
+
+    char temp_tail = temp[tempsize-1];
+    char seq_tail = sequence[seqsize-1];
+
+    int match_mismatch_score = (temp_tail == seq_tail) ? match_score : mismatch_score;
+
+    int score_seq;
+
+    score_seq = align_GAL_multithread(temp, sequence, tempsize-1,seqsize-1, cache, get_at_least - match_mismatch_score);
+    int match_result = score_seq + match_mismatch_score;
+    
+    // this breaks here - why?
+    /*if(match_mismatch_score == match_score)
+    {
+        cache[temp.size()][sequence.size()] = match_result;
+        return match_result;
+    }*/
+    
+
+    get_at_least = max(get_at_least, match_result);
+
+    score_seq = align_GAL_multithread(temp, sequence, tempsize, seqsize-1, cache, get_at_least - deletion_score);
+    int delete_result = score_seq + deletion_score;
+
+    get_at_least = max(get_at_least, delete_result);
+
+    score_seq = align_GAL_multithread(temp, sequence, tempsize-1, seqsize, cache,get_at_least - gap_score);
+    int gap_result = score_seq + gap_score;
+
+    int result = max(gap_result,max(match_result,delete_result));
+    cache[tempsize][seqsize] = result;
+    return result;
+}
+
 
 
 int16_t align_get_at_least_short(string &temp,string &sequence, vector<vector<int16_t> > &cache, int16_t get_at_least = TERRIBLE_SCORE)
