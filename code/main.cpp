@@ -1,3 +1,8 @@
+#ifndef GARBAGE_CUT_H
+#define GARBAGE_CUT_H
+#include "garbage_cut.cpp"
+#endif
+
 #include "align.cpp"
 #include "produce_seq.cpp"
 #include "miscelaneous.cpp"
@@ -46,6 +51,26 @@ vector<pair<int,string> > collapse_sequence(vector<string> pattern,string sequen
     return answer;
 }
 
+// assumes temp is a contatenation of strings in pattern, e.g. pattern = ["A","B","C"] then temp is (A)n (B)m (C)l for some n,m,l
+vector<int> template_pattern_parameters(vector<string> pattern, string temp)
+{
+    vector<int> parameters(pattern.size(),0);
+    int pat_index=0, temp_index = 0;
+    while(pat_index < pattern.size() || temp_index+pattern[pat_index].size() <= temp.size())
+    {
+        if(temp_index+pattern[pat_index].size() > temp.size())
+            pat_index++;
+        else if(temp.substr(temp_index,pattern[pat_index].size()) == pattern[pat_index])
+        {
+            parameters[pat_index]++;
+            temp_index += pattern[pat_index].size();
+        }
+        else pat_index++;
+    }
+
+    return parameters;
+}
+
 // replace align_original with faster implementation if its going to be used
 vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, vector<string> &sequences)
 {
@@ -78,7 +103,7 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
     auto start = chrono::steady_clock::now();
 
     vector<string> candidate_patterns = produce_sequences_outer_faster(pattern, avg_sequence_length);
-    vector<pair<int,string> > scores(candidate_patterns.size());
+    vector<pair<int,string> > scores(test_against);
 
     auto end = chrono::steady_clock::now();
 
@@ -100,7 +125,7 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
             //memset(cached,0,sizeof(cached));
             //int score = align_get_at_least_array(candidate_patterns[i], sequences[k]);
             int score = align_GAL_multithread(candidate_patterns[i],sequences[k], candidate_patterns[i].size(), sequences[k].size(), cache);
-            cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
+            //cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
             scores[i].first += score;
         }
     }
@@ -114,9 +139,16 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
     return scores;
 }
 
+void printvector(vector<int> v)
+{
+    for(int x:v)
+        cout << x << " ";
+    
+}
+
 void test_seqs(int n = 20, int test_against = 20)
 {
-	ifstream data("../sequences/real.txt");
+	ifstream data("../sequences/garbagefree.txt");
 
 	int num_sequences;
 	data >> num_sequences;
@@ -131,15 +163,24 @@ void test_seqs(int n = 20, int test_against = 20)
 	for(string &seq : sequences)
 		data >> seq;
 
-	pair<int,string> result = best_templates_from_raw_reads_time(biopattern, sequences, test_against)[0];
-	cout << "best align " << result.first << "\n";
-	//cout << result.second << "\n";
+	vector<pair<int,string>> result = best_templates_from_raw_reads_time(biopattern, sequences, test_against);
+	//cout << "best align " << result.first << ": "; printvector(template_pattern_parameters(biopattern,result.second));
+    for(auto res : result)
+    {
+        cout << res.first << ", params = ";
+        printvector(template_pattern_parameters(biopattern,res.second));
+        cout << "\n";
+    }
 }
+
+
 
 int main()
 {
+    //rawdata_to_garbagefree();
+
 	srand(47);
-	test_seqs(20,20);
+	test_seqs(500,500);
 	return 0;
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};

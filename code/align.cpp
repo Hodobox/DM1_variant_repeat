@@ -1,3 +1,6 @@
+#ifndef ALIGN_H
+#define ALIGN_H
+
 #include <map>
 #include <vector>
 #include <algorithm>
@@ -368,3 +371,4 @@ int align_get_at_least_array(string &temp,string &sequence, int get_at_least = T
     return result;
 }
 
+#endif

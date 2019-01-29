@@ -121,3 +121,7 @@ Specific align functions:
 		for fast clearing between pairs, a 2D bool array is used to keep track of which states have been memoised,
 		and is memset before each top-level align. Surprisingly, there is a ~10% improvement compared to the vector version.
 		(test: align_get_at_least_array)
+
+	align_GAL_multithread:
+		what it sounds like. get_at_least with 'realistic' best_score_possible, with changes that enable parallelization
+		so it can be multithreaded.

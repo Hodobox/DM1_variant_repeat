@@ -1,6 +1,12 @@
+#ifndef GARBAGE_CUT_H
+#define GARBAGE_CUT_H
+#include "garbage_cut.cpp"
+#endif
+
 #include <iostream>
 #include <set>
 #include <vector>
+#include <fstream>
 
 void count_prefixes(vector<string> candidate_templates)
 {
@@ -22,4 +28,26 @@ void count_prefixes(vector<string> candidate_templates)
 
 	cout << prefixhashes.size() << " unique prefixes\n";
 	
+}
+
+void rawdata_to_garbagefree()
+{
+    ifstream data("../sequences/real.txt");
+    ofstream output("../sequences/garbagefree.txt");
+    int num_sequences;
+    data >> num_sequences;
+    vector<string> garbagefree;
+    while(num_sequences--)
+    {
+        string sequence;
+        data >> sequence;
+        string result = cut_garbage(sequence, "CTG", 6, 15);
+        if(result.size() > 950)
+            garbagefree.push_back(result);
+    }
+
+    output << garbagefree.size() << "\n";
+    for(string &s : garbagefree)
+        output << s << "\n";
+
 }
