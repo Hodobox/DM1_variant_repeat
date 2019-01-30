@@ -71,7 +71,7 @@ vector<int> template_pattern_parameters(vector<string> pattern, string temp)
     return parameters;
 }
 
-// replace align_original with faster implementation if its going to be used
+// replace align_original with faster implementation if its going to be used, and produce seq with faster
 vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, vector<string> &sequences)
 {
     int lensum = 0; for(string &seq : sequences) lensum += seq.size();
@@ -94,7 +94,6 @@ vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, 
     return scores;
 }
 
-// for testing purposes
 vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &sequences, int test_against)
 {
     int lensum = 0; for(string &seq : sequences) lensum += seq.size();
@@ -107,16 +106,20 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
 
     auto end = chrono::steady_clock::now();
 
-    cout << "Time for pattern generation: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
-    //cout << candidate_patterns.size() << " of length " << avg_sequence_length << "\n";
+    test_against = min(test_against,(int)candidate_patterns.size());
+    cerr << "Testing " << sequences.size() << " sequences against " << test_against << " templates\n";
+    cerr << "Time for pattern generation: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
+    cerr << candidate_patterns.size() << " of length " << avg_sequence_length << "\n";
 
-    random_shuffle(candidate_patterns.begin(),candidate_patterns.end());
+    //random_shuffle(candidate_patterns.begin(),candidate_patterns.end());
 
     start = chrono::steady_clock::now();
     
     #pragma omp parallel for ordered
     for(int i=0;i<test_against;i++)
     {
+        if(i > 35786 && (i%10)==0)
+            cerr << i << "/" << candidate_patterns.size() << "\n";
         string candidate = candidate_patterns[i];
         scores[i] = {0,candidate_patterns[i]};
         for(int k=0;k<sequences.size();++k)
@@ -131,8 +134,8 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
     }
 
     end = chrono::steady_clock::now();
-    cout << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
-    cout << "Time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (sequences.size() * test_against) << " ms\n";
+    cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
+    cerr << "Time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (sequences.size() * test_against) << " ms\n";
 
     sort(scores.begin(),scores.end());
     reverse(scores.begin(),scores.end());
@@ -157,8 +160,6 @@ void test_seqs(int n = 20, int test_against = 20)
 
 	n = min(n, num_sequences);
 
-	cout << "Testing " << n << " sequences against " << test_against << " templates\n";
-
 	vector<string> sequences(n);
 	for(string &seq : sequences)
 		data >> seq;
@@ -180,7 +181,7 @@ int main()
     //rawdata_to_garbagefree();
 
 	srand(47);
-	test_seqs(500,500);
+	test_seqs(50000,50000);
 	return 0;
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};
