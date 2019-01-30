@@ -114,14 +114,15 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
 
     //random_shuffle(candidate_patterns.begin(),candidate_patterns.end());
 
+    vector<vector<int> > pair_scores;
+
     start = chrono::steady_clock::now();
     
     #pragma omp parallel for ordered
     for(int i=0;i<test_against;i++)
     {
-        if(i > 35786 && (i%10)==0)
-            cerr << i << "/" << candidate_patterns.size() << "\n";
         string candidate = candidate_patterns[i];
+        vector<int> params = template_pattern_parameters(pattern,candidate);
         scores[i] = {0,candidate_patterns[i]};
         for(int k=0;k<sequences.size();++k)
         {
@@ -129,7 +130,12 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
             //memset(cached,0,sizeof(cached));
             //int score = align_get_at_least_array(candidate_patterns[i], sequences[k]);
             int score = align_GAL_multithread(candidate_patterns[i],sequences[k], candidate_patterns[i].size(), sequences[k].size(), cache);
-            //cout << "Template " << i << ", sequence " << k << " = " << score << "\n";
+            vector<int> pairscore_element = params;
+            pairscore_element.push_back(k);
+            pairscore_element.push_back(score);
+            #pragma omp critical
+            pair_scores.push_back(pairscore_element);
+            //cout << params[0] << " " << params[1] << " " << params[2] << " " << k << " = " << score << "\n";
             scores[i].first += score;
         }
     }
@@ -137,6 +143,15 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
     end = chrono::steady_clock::now();
     cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
     cerr << "Time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (sequences.size() * test_against) << " ms\n";
+
+    for(vector<int> v: pair_scores)
+    {
+        for(int i=0;i<v.size();++i)
+        {
+            if(i) cout << " ";
+            cout << v[i];
+        } cout << "\n";
+    }
 
     sort(scores.begin(),scores.end());
     reverse(scores.begin(),scores.end());
@@ -182,7 +197,7 @@ int main()
     //rawdata_to_garbagefree();
 
 	srand(47);
-	test_seqs(50000,50000);
+	test_seqs(50000, 50000);
 	return 0;
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};
