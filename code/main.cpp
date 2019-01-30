@@ -102,11 +102,12 @@ vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> patt
     auto start = chrono::steady_clock::now();
 
     vector<string> candidate_patterns = produce_sequences_outer_faster(pattern, avg_sequence_length);
-    vector<pair<int,string> > scores(test_against);
+
 
     auto end = chrono::steady_clock::now();
 
     test_against = min(test_against,(int)candidate_patterns.size());
+    vector<pair<int,string> > scores(test_against);
     cerr << "Testing " << sequences.size() << " sequences against " << test_against << " templates\n";
     cerr << "Time for pattern generation: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
     cerr << candidate_patterns.size() << " of length " << avg_sequence_length << "\n";
