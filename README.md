@@ -8,5 +8,8 @@ Notable project files:
 - code/ contains... the code
 - sequences/ contains sample DNA sequences (see real.txt)
 - test/ contains output of testing different optimisations (parameters of test, all scores obtained, and finally resulting times)
+- outputs/ contains data-outputs
+- visualiser.py {usage: python3 visualiser.py. then input filename with data}: displays a plot of the data with xaxis=#CCGCTG   repetitions, yaxis = score
+
 
 All tests were done on a single core of a intel i7-5500U CPU @ 2.40GHz
