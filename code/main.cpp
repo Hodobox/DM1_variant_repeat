@@ -17,39 +17,10 @@
 #include <cstring>
 using namespace std;
 
+ifstream input;
+ofstream output;
 
-// have not tested
-// might want to replace align_original with faster implementation if its going to be used
-pair<int,string> produce_sequence_and_align(vector<string> pattern, string temp)
-{
-    vector<string> sequences = produce_sequences_outer(pattern, temp.size());
-    vector<pair<int,string> > results;
-   
-    for(string seq : sequences)
-    {
-    	vector<vector<int> > cache(seq.size()+1,vector<int>(temp.size()+1,UNCACHED));
-    	results.push_back({align_original(seq,temp,cache),seq});
-    }
-    sort(results.begin(),results.end());
-    return results.back();
-}
-
-// have not tested
-vector<pair<int,string> > collapse_sequence(vector<string> pattern,string sequence)
-{
-    vector<pair<int,string> > answer;
-
-    for(string elem : pattern)
-    {
-        int repetitions = 1;
-
-        while(elem.size() * repetitions <= sequence.size() && sequence.substr((repetitions-1)*elem.size(),elem.size()) == elem)
-            repetitions++;
-
-        answer.push_back({repetitions-1,elem});
-    }
-    return answer;
-}
+const bool TESTING = true;
 
 // assumes temp is a contatenation of strings in pattern, e.g. pattern = ["A","B","C"] then temp is (A)n (B)m (C)l for some n,m,l
 vector<int> template_pattern_parameters(vector<string> pattern, string temp)
@@ -71,106 +42,68 @@ vector<int> template_pattern_parameters(vector<string> pattern, string temp)
     return parameters;
 }
 
-// replace align_original with faster implementation if its going to be used, and produce seq with faster
-vector<pair<int,string> > best_templates_from_raw_reads(vector<string> pattern, vector<string> &sequences)
+void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &sequences, int test_against)
 {
-    int lensum = 0; for(string &seq : sequences) lensum += seq.size();
-    int avg_sequence_length = round( (double)lensum / sequences.size());
-    vector<string> candidate_patterns = produce_sequences_outer(pattern, avg_sequence_length);
-    vector<pair<int,string> > scores(candidate_patterns.size());
-    
-    for(int i=0;i<candidate_patterns.size();i++)
-    {
-        scores[i] = {0,candidate_patterns[i]};
-        for(string &seq : sequences)
-        {
-        	vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(seq.size()+1,UNCACHED));
-            scores[i].first += align_original(candidate_patterns[i], seq, cache);
-        }
-    }
+    int total_templates = 0, alignments_done = 0, sequences_complete = 0;
+    vector<vector<int> > pair_scores;
 
-    sort(scores.begin(),scores.end());
-    reverse(scores.begin(),scores.end());
-    return scores;
-}
-
-vector<pair<int,string> > best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &sequences, int test_against)
-{
-    int lensum = 0; for(string &seq : sequences) lensum += seq.size();
-    int avg_sequence_length = round( (double)lensum / sequences.size());
+    cerr << "Testing " << sequences.size() << " sequences against up to " << test_against << " templates\n";
 
     auto start = chrono::steady_clock::now();
 
-    vector<string> candidate_patterns = produce_sequences_outer_faster(pattern, avg_sequence_length);
-
-
-    auto end = chrono::steady_clock::now();
-
-    test_against = min(test_against,(int)candidate_patterns.size());
-    vector<pair<int,string> > scores(test_against);
-    cerr << "Testing " << sequences.size() << " sequences against " << test_against << " templates\n";
-    cerr << "Time for pattern generation: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
-    cerr << candidate_patterns.size() << " of length " << avg_sequence_length << "\n";
-
-    //random_shuffle(candidate_patterns.begin(),candidate_patterns.end());
-
-    vector<vector<int> > pair_scores;
-
-    start = chrono::steady_clock::now();
     
     #pragma omp parallel for ordered
-    for(int i=0;i<test_against;i++)
+    for(int i=0;i<sequences.size();i++)
     {
-        string candidate = candidate_patterns[i];
-        vector<int> params = template_pattern_parameters(pattern,candidate);
-        scores[i] = {0,candidate_patterns[i]};
-        for(int k=0;k<sequences.size();++k)
+        vector<string> templates = produce_sequences_outer_faster(pattern, sequences[i].size());
+        if(TESTING)
         {
-            vector<vector<int> > cache(candidate_patterns[i].size()+1,vector<int>(sequences[k].size()+1,UNCACHED));
-            //memset(cached,0,sizeof(cached));
-            //int score = align_get_at_least_array(candidate_patterns[i], sequences[k]);
-            int score = align_GAL_multithread(candidate_patterns[i],sequences[k], candidate_patterns[i].size(), sequences[k].size(), cache);
-            vector<int> pairscore_element = params;
-            pairscore_element.push_back(k);
+            random_shuffle(templates.begin(),templates.end());
+        }
+        int alignments_to_do = min((int)templates.size(),test_against);
+        #pragma omp atomic
+        alignments_done += alignments_to_do;
+        for(int k=0;k<alignments_to_do;++k)
+        {
+            vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
+            int score = align_GAL_multithread(templates[k],sequences[i], templates[k].size(), sequences[i].size(), cache);
+            vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
+            pairscore_element.push_back(i);
             pairscore_element.push_back(score);
             #pragma omp critical
             pair_scores.push_back(pairscore_element);
-            //cout << params[0] << " " << params[1] << " " << params[2] << " " << k << " = " << score << "\n";
-            scores[i].first += score;
         }
+
+        #pragma omp atomic
+        sequences_complete += 1;
+
+        if(sequences_complete%10 == 0) 
+        {
+            #pragma omp critical
+            cerr << sequences_complete << "/" << sequences.size() << "\n";
+        }
+
     }
 
-    end = chrono::steady_clock::now();
+    auto end = chrono::steady_clock::now();
     cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
-    cerr << "Time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (sequences.size() * test_against) << " ms\n";
+    cerr << "Average time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (alignments_done) << " ms\n";
 
     for(vector<int> v: pair_scores)
     {
         for(int i=0;i<v.size();++i)
         {
-            if(i) cout << " ";
-            cout << v[i];
-        } cout << "\n";
+            if(i) output << " ";
+            output << v[i];
+        } output << "\n";
     }
-
-    sort(scores.begin(),scores.end());
-    reverse(scores.begin(),scores.end());
-    return scores;
-}
-
-void printvector(vector<int> v)
-{
-    for(int x:v)
-        cout << x << " ";
-    
 }
 
 void test_seqs(int n = 20, int test_against = 20)
 {
-	ifstream data("../sequences/garbagefree.txt");
 
 	int num_sequences;
-	data >> num_sequences;
+	input >> num_sequences;
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};
 
@@ -178,36 +111,79 @@ void test_seqs(int n = 20, int test_against = 20)
 
 	vector<string> sequences(n);
 	for(string &seq : sequences)
-		data >> seq;
+		input >> seq;
 
-	vector<pair<int,string>> result = best_templates_from_raw_reads_time(biopattern, sequences, test_against);
-	//cout << "best align " << result.first << ": "; printvector(template_pattern_parameters(biopattern,result.second));
-    for(auto res : result)
-    {
-        cout << res.first << ", params = ";
-        printvector(template_pattern_parameters(biopattern,res.second));
-        cout << "\n";
-    }
+    best_templates_from_raw_reads_time(biopattern, sequences, test_against);
 }
 
 
 
-int main()
+int main(int argc, char** argv)
 {
     //rawdata_to_garbagefree();
 
+    if(argc != 3)
+    {
+        cerr << "Usage: ./binary $input_path $output_path\n";
+        return 1;
+    }
+
+    if(TESTING)
+    {
+        cerr << "TESTING is set to true. For real full-data runs, set TESTING to false!\n";
+    }
+
+    input.open(argv[1]);
+    output.open(argv[2]);
+
 	srand(47);
-	test_seqs(50000, 50000);
+	test_seqs(500, 500);
 	return 0;
+
+    /*
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};
 	string sequence = "GCTGTTGCTGCTGCTTGCTGCTGCTTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCATGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCT";//GCTGCTGCTGCTGCTGTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGATGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCCGCTGCCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCCGCTGCGCTGCGCTGCGCTGCCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCGCTGCCGCTGCCGCAGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCT";
-	//cin >> sequence;
-	vector<string> candidate_templates = produce_sequences_outer(biopattern, sequence.size());
-	cout << candidate_templates.size() << " candidates, sequence len " << sequence.size() << "\n";
+	cin >> sequence;
+	vector<string> candidate_templates = produce_sequences_outer_faster(biopattern, sequence.size());
+	cerr << candidate_templates.size() << " candidates, sequence len " << sequence.size() << "\n";
 
-	vector<vector<int> >  cache(candidate_templates[0].size()+1,vector<int>(sequence.size()+1,UNCACHED));
-	auto start = chrono::steady_clock::now();
-	cout << align_get_at_least(candidate_templates[0], sequence, cache) << " best align score\n";
-	auto end = chrono::steady_clock::now();
+    int best = -1;
+    vector<int> params;
+
+    auto start = chrono::steady_clock::now();
+
+
+    int done = 0;
+    vector<vector<int> > res;
+    #pragma omp parallel for ordered
+    for(int i=0;i<candidate_templates.size();++i)
+    {
+        done++;
+        if(done%1000==0)
+            cerr << done << "\n";
+        vector<vector<int> >  cache(candidate_templates[i].size()+1,vector<int>(sequence.size()+1,UNCACHED));
+        int score = align_GAL_multithread(candidate_templates[i], sequence, candidate_templates[i].size(), sequence.size(), cache);
+        //cout << score << " " << template_pattern_parameters(biopattern,candidate_templates[i])[1] << "\n";
+        vector<int> tmp = template_pattern_parameters(biopattern, candidate_templates[i]);
+        tmp.push_back(score);
+        #pragma omp critical
+        res.push_back(tmp);
+    }
+
+    auto end = chrono::steady_clock::now();
+	
+    cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
+   
+	for(int i=0;i<res.size();++i)
+    {
+        for(int k=0;k<res[i].size();++k)
+        {
+            if(k) cout << " ";
+            cout << res[i][k];
+        }
+        cout << "\n";
+    }
+
+    */
 }

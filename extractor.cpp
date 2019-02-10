@@ -1,13 +1,14 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <algorithm>
 using namespace std;
 
 vector<int> tokenize(string &s)
 {
     vector<int> res;
-    int cur;
+    int cur = 0;
     bool real = false;
     for(char c:s)
     {
@@ -30,36 +31,72 @@ vector<int> tokenize(string &s)
     return res;
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    string filename;
-    cin >> filename;
-    ifstream data(filename);
-    string line;
-    vector<pair<int,vector<int>> > best;
-    while(getline(data,line))
+    if(argc != 3)
     {
-        if(count(line.begin(),line.end(),',') > 0)
-        {
-            cout << line << "\n";
-        }
-        else
-        {
-            vector<int> numbers = tokenize(line);
-            vector<int> nml = {numbers[0],numbers[1],numbers[2]};
-            int seqnum = numbers[3], score = numbers[4];
-            if(seqnum >= best.size())
-            {
-                best.resize(seqnum+1,{-1,{}});
-            }
-            if(best[seqnum].first < score)
-            {
-                best[seqnum] = {score,nml};
-            }
-        }
+        cerr << "usage: ./binary $inputPath $outputPath\n";
+        return 1;
     }
 
-    for(int i=0;i<best.size();++i)
-        cout << best[i].first << " " << best[i].second[0] << " " << best[i].second[1] << " " << best[i].second[2] << "\n";
+    ifstream data(argv[1]);
+    ofstream output(argv[2]);
+    string line;
+
+    int cnt = 0;
+    vector<int> best_score;
+    vector< vector< vector<int> > > best_scoring_templates;
+
+    while(getline(data,line))
+    {
+        cnt++;
+        if(cnt%100000==0)
+            cerr << cnt << "\n";
+
+        vector<int> numbers = tokenize(line);
+        vector<int> nml = {numbers[0],numbers[1],numbers[2]};
+        int seqnum = numbers[3], score = numbers[4];
+
+        if(seqnum >= best_score.size())
+        {
+            best_score.resize(seqnum+1,0);
+            best_scoring_templates.resize(seqnum+1);
+        }
+
+        if(score > best_score[seqnum])
+        {
+            best_score[seqnum] = score;
+            best_scoring_templates[seqnum].clear();
+        }
+
+        if(score == best_score[seqnum])
+            best_scoring_templates[seqnum].push_back(nml);
+
+    }
+
+    //format
+    // num of sequences
+    // for each sequence (in order):
+    // score, num of best templates
+    // n m l of each template
+
+    output << best_score.size() << "\n";
+    
+    for(int i=0;i<best_score.size();++i)
+    {
+        output << best_score[i] << " " << best_scoring_templates[i].size() << "\n";
+        for(vector<int> nml : best_scoring_templates[i])
+        {
+            for(int k=0;k<nml.size();++k)
+            {
+                if(k) output << " ";
+                output << nml[k];
+            }
+            output << "\n";
+        }
+
+    }
+
+    return 0;
 
 }
