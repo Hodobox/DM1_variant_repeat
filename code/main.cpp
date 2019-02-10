@@ -20,7 +20,7 @@ using namespace std;
 ifstream input;
 ofstream output;
 
-const bool TESTING = true;
+const bool TESTING = false;
 
 // assumes temp is a contatenation of strings in pattern, e.g. pattern = ["A","B","C"] then temp is (A)n (B)m (C)l for some n,m,l
 vector<int> template_pattern_parameters(vector<string> pattern, string temp)
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
     output.open(argv[2]);
 
 	srand(47);
-	test_seqs(500, 500);
+	test_seqs(600, 1000000);
 	return 0;
 
     /*
