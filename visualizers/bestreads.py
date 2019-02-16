@@ -1,19 +1,13 @@
 import matplotlib.pyplot as plt
-import sys
+from collections import defaultdict
+from args import args_init
 
-if len(sys.argv) < 2 or len(sys.argv) > 3:
-    print("Usage: python3 bestreads.py filename [0-indexed parameter, default 1]")
-    sys.exit(1)
+args = args_init()
+used_args = ['filename','param_limits','param_displayed','param_name','point_width']
+filename,param_limits,param_displayed,param_name,point_width = [ args[name] for name in used_args ]
 
-filename = sys.argv[1]
+points = defaultdict(int)
 
-param_names = ['(CTG)N','(CCGCTG)M','(CTG)L']
-param_displayed = 1
-if len(sys.argv) == 3:
-    param_displayed = int(sys.argv[2])
-
-
-points = {}
 
 with open(filename,'r') as data:
     lines = [line.strip() for line in data.readlines()]
@@ -26,15 +20,13 @@ with open(filename,'r') as data:
         for k in range(num):
             params = [int(x) for x in lines[curline].split()]
             param_value = params[param_displayed]
-            if param_value in points:
-                points[ param_value ] += 1
-            else:
-                points[param_value] = 1
+            if param_limits == None or (param_value >= param_limits[0] and param_value <= param_limits[1]):
+                points[param_value] += 1
             curline += 1
 
 points = list(sorted( [ (p,points[p])  for p in points ] ))
 plt.title(filename)
-plt.xlabel(param_names[param_displayed])
+plt.xlabel(param_name)
 plt.ylabel("# of best-scoring templates")
-plt.scatter([p[0] for p in points], [p[1] for p in points], s = 9)
+plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width)
 plt.show()

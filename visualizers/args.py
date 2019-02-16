@@ -1,41 +1,26 @@
 import argparse
 
+ARGS = ['filename','alpha','param_displayed','param_limits','score_limits','param_name','point_width']
+param_names = ['(CTG)N','CCGCTG(M)','CTG(L)']
+
 def add_args(parser):
     parser.add_argument('filename', help = 'input file')
-    parser.add_argument('-a', '--alpha', type = float, help = 'alpha value of plotted points in (0,1]')
-    parser.add_argument('-p', '--param_displayed', type = int, choices = [0,1,2], help = 'index of parameter to display')
-    parser.add_argument('-l', '--limits', nargs=2, type = int, help = 'lower and upper bound of displayed (parameter) values')
-    parser.add_argument('-s', '--score', nargs=2, type = int, help = 'lower and upper bound of displayed scores')
-
-filename = None
-score_limits = None
-param_limits = None
-alpha = 1
-param_displayed = 1
-param_names = ['(CTG)N','(CCGCTG)M','(CTG)L']
+    parser.add_argument('-a', '--alpha', type = float, default = 1, help = 'alpha value of plotted points in (0,1]')
+    parser.add_argument('-p', '--param_displayed', type = int, choices = [0,1,2], default = 1, help = 'index of parameter to display')
+    parser.add_argument('-l', '--limits', nargs=2, type = int, dest = 'param_limits', help = 'lower and upper bound of displayed (parameter) values')
+    parser.add_argument('-s', '--score', nargs=2, type = int, dest = 'score_limits', help = 'lower and upper bound of displayed scores')
+    parser.add_argument('-n', '--param_name', type = str, help = 'parameter name to display on plot axis')
+    parser.add_argument('-w', '--width', type = float, default = 1, dest = 'point_width', help = 'width of points on plot')
 
 def args_init():
-    global filename, score_limits, param_limits, alpha, param_displayed, param_names
- 
     argparser = argparse.ArgumentParser()
     add_args(argparser)
     args = argparser.parse_args()
- 
-    filename = args.filename
- 
-    param_displayed = 1
-    if args.param_displayed != None:
-        param_displayed = args.param_displayed
+    retval = {name : getattr(args, name) for name in ARGS}
+    
+    assert(retval['alpha'] > 0 and retval['alpha'] <= 1)
 
-    alpha = 1
-    if args.alpha != None:
-        assert args.alpha > 0 and args.alpha <=1
-        alpha = args.alpha
+    if retval['param_name'] == None:
+        retval['param_name'] = param_names[retval['param_displayed'] ]
 
-    param_limits = None
-    if args.limits != None:
-        param_limits = args.limits
-
-    score_limits = None
-    if args.score != None:
-        score_limits = args.score
+    return retval

@@ -1,20 +1,12 @@
 import matplotlib.pyplot as plt
-import sys
+from collections import defaultdict
+from args import args_init
 
-if len(sys.argv) < 2 or len(sys.argv) > 4:
-    print("Usage: python3 bestreads.py filename [0-indexed parameter, default 1] [alpha in (0,1]")
-    sys.exit(1)
+args = args_init()
+used_args = ['filename','alpha','score_limits','param_limits','param_displayed','param_name','point_width']
+filename,alpha,score_limits,param_limits,param_displayed,param_name,point_width = [ args[name] for name in used_args ]
 
-filename = sys.argv[1]
-
-param_names = ['(CTG)N','(CCGCTG)M','(CTG)L']
-param_displayed = 1
-if len(sys.argv) >= 3:
-    param_displayed = int(sys.argv[2])
-
-alpha = 1
-
-points = {}
+points = defaultdict(list)
 
 with open(filename,'r') as data:
     counter = 0
@@ -26,10 +18,10 @@ with open(filename,'r') as data:
         n,m,l,seq,score = [int(x) for x in line.split()]
         params = [n,m,l]
         param_value = params[param_displayed]
-        if param_value in points:
-            points[param_value].append(score)
-        else:
-            points[param_value] = [score]
+        
+        if param_limits == None or (param_value >= param_limits[0] and param_value <= param_limits[1]):
+            if score_limits == None or (score >= score_limits[0] and score_limits <= score_limits[1]):
+                points[param_value].append(score)
 
 tmp = []
 
@@ -40,7 +32,7 @@ for p in points:
 points = tmp
 
 plt.title(filename)
-plt.xlabel(param_names[param_displayed])
+plt.xlabel(param_name)
 plt.ylabel("score")
-plt.scatter([p[0] for p in points], [p[1] for p in points], s = 1,alpha=alpha)
+plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width, alpha = alpha)
 plt.show()

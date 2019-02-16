@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
-import sys
 from collections import defaultdict
 from args import args_init
-args_init()
-from args import filename, score_limits, param_limits, alpha, param_displayed, param_names
+
+args = args_init()
+used_args = ['filename','alpha','score_limits','param_limits','param_displayed','param_name','point_width']
+filename,alpha,score_limits,param_limits,param_displayed,param_name,point_width = [ args[name] for name in used_args ]
 
 points = defaultdict(list)
 
@@ -33,7 +34,7 @@ for p in points:
 points = tmp
 
 plt.title(filename)
-plt.xlabel(param_names[param_displayed])
+plt.xlabel(param_name)
 plt.ylabel("score")
-plt.scatter([p[0] for p in points], [p[1] for p in points], s = 1, alpha=alpha)
+plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width, alpha=alpha)
 plt.show()
