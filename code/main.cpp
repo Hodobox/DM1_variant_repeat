@@ -116,6 +116,17 @@ void test_seqs(int n = 20, int test_against = 20)
     best_templates_from_raw_reads_time(biopattern, sequences, test_against);
 }
 
+string get_seq(int num)
+{
+    int numseq;
+    input >> numseq;
+    string sequence;
+    for(int i=0;i<num;++i)
+        input >> sequence;
+
+    input >> sequence;
+    return sequence;
+}
 
 
 int main(int argc, char** argv)
@@ -136,10 +147,43 @@ int main(int argc, char** argv)
     input.open(argv[1]);
     output.open(argv[2]);
 
-	srand(47);
-	test_seqs(600, 1000000);
-	return 0;
+	//srand(47);
+	//test_seqs(600, 1000000);
 
+    /*string sequence = get_seq(386);
+
+    vector<string> pat = produce_sequences_outer_faster({"CTG","CCGCTG","CTG"},sequence.size());
+    cout << pat.size() << "\n";
+
+    int best_score = -1;
+    int done = 0;
+    #pragma omp parallel for ordered
+    for(int i=0;i<pat.size();++i)
+    {
+        string s = pat[i];
+        #pragma omp atomic
+        done += 1;
+
+        if(done % 1000==0)
+            cout << done << "\n";
+
+        vector<vector<int> > cache(s.size()+1,vector<int>(sequence.size()+1,UNCACHED));
+        int score = align_GAL_multithread(s,sequence,s.size(),sequence.size(),cache);
+        
+        #pragma omp critical
+        best_score = max(best_score,score);
+
+        if(score ==1097)
+        {
+            vector<int> params = template_pattern_parameters({"CTG","CCGCTG","CTG"},s);
+            cout << params[0] << " " << params[1] << " " << params[2] << "\n";
+        }
+    }
+
+    cout << best_score << "\n";
+
+	return 0;
+    */
     /*
 
 	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};

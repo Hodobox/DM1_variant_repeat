@@ -1,22 +1,11 @@
 import matplotlib.pyplot as plt
 import sys
+from collections import defaultdict
+from args import args_init
+args_init()
+from args import filename, score_limits, param_limits, alpha, param_displayed, param_names
 
-if len(sys.argv) < 2 or len(sys.argv) > 4:
-    print("Usage: python3 bestreads.py filename [0-indexed parameter, default 1] [alpha in (0,1]")
-    sys.exit(1)
-
-filename = sys.argv[1]
-
-param_names = ['(CTG)N','(CCGCTG)M','(CTG)L']
-param_displayed = 1
-if len(sys.argv) >= 3:
-    param_displayed = int(sys.argv[2])
-
-alpha = 1
-
-if len(sys.argv) == 4:
-    alpha = float(sys.argv[3])
-points = {}
+points = defaultdict(list)
 
 with open(filename,'r') as data:
     lines = [line.strip() for line in data.readlines()]
@@ -29,10 +18,10 @@ with open(filename,'r') as data:
         for k in range(num):
             params = [int(x) for x in lines[curline].split()]
             param_value = params[param_displayed]
-            if param_value in points:
-                points[param_value].append(score)
-            else:
-                points[param_value] = [score]
+
+            if param_limits == None or (param_value >= param_limits[0] and param_value <= param_limits[1]):
+                if score_limits == None or (score >= score_limits[0] and score <= score_limits[1]):
+                    points[param_value].append(score)
             curline += 1
 
 tmp = []
