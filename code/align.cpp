@@ -11,6 +11,49 @@ gap_score = -1,
 mismatch_score = -1,
 match_score = +1;
 
+// should have identical outputs to pyth_orig/main.py (original python implementation)
+int align_original(string &temp,string &sequence, vector<vector<int> > &cache)
+{
+    //calls++;
+
+    if(temp.empty())
+        return sequence.size() * deletion_score;
+    if(sequence.empty())
+        return temp.size() * gap_score;
+
+    if(cache[temp.size()][sequence.size()] != UNCACHED)
+        return cache[temp.size()][sequence.size()];
+
+    string temp_tail = temp.substr(temp.size()-1,1); //temp_tail = temp.substr(1);
+    string seq_tail = sequence.substr(sequence.size()-1,1);//, seq_tail = sequence.substr(1);
+    // in C++ swapped functioning of tail and head; we match from the right
+    // as then we can pop characters form the right side in O(1) and pass the heads by reference
+    // which should save us one order of time
+
+    int match_mismatch_score = (temp_tail == seq_tail) ? match_score : mismatch_score;
+
+    int score_seq;
+
+    temp.pop_back();
+    sequence.pop_back();
+    score_seq = align_original(temp, sequence, cache);
+    int match_result = score_seq + match_mismatch_score;
+    temp.push_back(temp_tail[0]);
+    sequence.push_back(seq_tail[0]);
+
+    sequence.pop_back();
+    score_seq = align_original(temp, sequence, cache);
+    sequence.push_back(seq_tail[0]);
+    int delete_result = score_seq + deletion_score;
+    temp.pop_back();
+    score_seq = align_original(temp, sequence, cache);
+    temp.push_back(temp_tail[0]);
+    int gap_result = score_seq + gap_score;
+
+    int result = max(gap_result,max(match_result,delete_result));
+    cache[temp.size()][sequence.size()] = result;
+    return result;
+}
 
 int align_greedymatch_multithread(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache)
 {
