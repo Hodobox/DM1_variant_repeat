@@ -1,0 +1,4 @@
+test -O2
+improve align_gm_mt_opt
+make sure align_original_greedymatch coincides with align_original
+analyse why align_GAL_multithread returns slightly smaller values some of the time compared to align_original_greedymatch

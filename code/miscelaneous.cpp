@@ -1,12 +1,4 @@
-#ifndef GARBAGE_CUT_H
-#define GARBAGE_CUT_H
-#include "garbage_cut.cpp"
-#endif
-
-#include <iostream>
-#include <set>
-#include <vector>
-#include <fstream>
+#include "miscelaneous.h"
 
 void count_prefixes(vector<string> candidate_templates)
 {
@@ -50,4 +42,24 @@ void rawdata_to_garbagefree()
     for(string &s : garbagefree)
         output << s << "\n";
 
+}
+
+// assumes temp is a contatenation of strings in pattern, e.g. pattern = ["A","B","C"] then temp is (A)n (B)m (C)l for some n,m,l
+vector<int> template_pattern_parameters(vector<string> pattern, string temp)
+{
+    vector<int> parameters(pattern.size(),0);
+    int pat_index=0, temp_index = 0;
+    while(pat_index < pattern.size() || temp_index+pattern[pat_index].size() <= temp.size())
+    {
+        if(temp_index+pattern[pat_index].size() > temp.size())
+            pat_index++;
+        else if(temp.substr(temp_index,pattern[pat_index].size()) == pattern[pat_index])
+        {
+            parameters[pat_index]++;
+            temp_index += pattern[pat_index].size();
+        }
+        else pat_index++;
+    }
+
+    return parameters;
 }

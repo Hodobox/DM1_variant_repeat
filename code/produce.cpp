@@ -1,8 +1,4 @@
-#include <vector>
-#include <string>
-#include <set>
-using namespace std;
-
+#include "produce.h"
 vector<string> produce_sequences(vector<string> &pattern, int max_length, int outer_index,int inner_index,string &partial_result)
 {
     if(partial_result.size() >= max_length)
@@ -82,4 +78,23 @@ vector<string> produce_sequences_outer_faster(vector<string> pattern, int max_le
     for(auto r : unique)
         result.push_back(r);
     return result;
+}
+
+string produce_specific(vector<string> pattern, vector<int> howmany, int length)
+{
+    assert(pattern.size() == howmany.size());
+
+    string res = "";
+    for(int i=0;i<howmany.size();++i)
+    {
+        for(int k=0;k<howmany[i];++k)
+            res += pattern[i];
+    }
+
+    if(res.size() != length)
+    {
+        cerr << "warning: produced sequence different size than given length\n";
+    }
+
+    return res;
 }

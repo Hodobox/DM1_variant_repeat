@@ -35,6 +35,6 @@ points = tmp
 
 plt.title(filename)
 plt.xlabel(param_name)
-plt.ylabel("score")
+plt.ylabel("Score")
 plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width, alpha=alpha)
 plt.show()

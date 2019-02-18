@@ -1,11 +1,7 @@
-#ifndef GARBAGE_CUT_H
-#define GARBAGE_CUT_H
-#include "garbage_cut.cpp"
-#endif
-
-#include "align.cpp"
-#include "produce_seq.cpp"
-#include "miscelaneous.cpp"
+#include "garbage_cut.h"
+#include "align.h"
+#include "produce.h"
+#include "miscelaneous.h"
 
 #include <omp.h>
 
@@ -20,26 +16,15 @@ using namespace std;
 ifstream input;
 ofstream output;
 
-const bool TESTING = false;
+const bool TESTING = true;
 
-// assumes temp is a contatenation of strings in pattern, e.g. pattern = ["A","B","C"] then temp is (A)n (B)m (C)l for some n,m,l
-vector<int> template_pattern_parameters(vector<string> pattern, string temp)
+// first by sequence number, then by parameters
+bool pairscorecmp(vector<int> a,vector<int> b)
 {
-    vector<int> parameters(pattern.size(),0);
-    int pat_index=0, temp_index = 0;
-    while(pat_index < pattern.size() || temp_index+pattern[pat_index].size() <= temp.size())
-    {
-        if(temp_index+pattern[pat_index].size() > temp.size())
-            pat_index++;
-        else if(temp.substr(temp_index,pattern[pat_index].size()) == pattern[pat_index])
-        {
-            parameters[pat_index]++;
-            temp_index += pattern[pat_index].size();
-        }
-        else pat_index++;
-    }
+    if(a[3] != b[3])
+        return a[3] < b[3];
 
-    return parameters;
+    return a < b;   
 }
 
 void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &sequences, int test_against)
@@ -50,7 +35,6 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
     cerr << "Testing " << sequences.size() << " sequences against up to " << test_against << " templates\n";
 
     auto start = chrono::steady_clock::now();
-
     
     #pragma omp parallel for ordered
     for(int i=0;i<sequences.size();i++)
@@ -63,8 +47,16 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         int alignments_to_do = min((int)templates.size(),test_against);
         #pragma omp atomic
         alignments_done += alignments_to_do;
+
+        //align_gm_mt_opt_outer(pattern, i, sequences[i],templates,alignments_to_do,pair_scores);
+        //continue;
         for(int k=0;k<alignments_to_do;++k)
         {
+            if(k % 1000 == 0)
+            {
+                #pragma omp critical
+                cerr << k << "/" << alignments_to_do << "\n";
+            }
             vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
             int score = align_GAL_multithread(templates[k],sequences[i], templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
@@ -86,8 +78,13 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
     }
 
     auto end = chrono::steady_clock::now();
-    cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
-    cerr << "Average time per alignment: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() / (alignments_done) << " ms\n";
+    cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " milli sec\n";
+    cerr << "Average time per alignment: " << chrono::duration_cast<chrono::microseconds>(end - start).count() / (alignments_done) << " micro sec\n";
+
+    if(TESTING)
+    {
+        sort(pair_scores.begin(),pair_scores.end(),pairscorecmp);
+    }
 
     for(vector<int> v: pair_scores)
     {
@@ -143,91 +140,53 @@ int main(int argc, char** argv)
     {
         cerr << "TESTING is set to true. For real full-data runs, set TESTING to false!\n";
     }
+    /*vector<vector<int> > ps;
+    string optseq = "AABBCC";
+    vector<string> temps = {"AAABBB","AABBCC","ABBCCC"};
+    align_gm_mt_opt_outer({"A","B","C"}, 0, optseq, temps, 3, ps);
+
+    return 0;*/
 
     input.open(argv[1]);
     output.open(argv[2]);
+	srand(47);
+	test_seqs(1, 1000);
+    return 0;
 
-	//srand(47);
-	//test_seqs(600, 1000000);
+    string seq = get_seq(0);
+    string temp = produce_specific({"CTG","CCGCTG","CTG"}, {78, 142, 100}, 1386);
 
-    /*string sequence = get_seq(386);
+    
+    //seq = seq.substr(0,121);
+    //temp = temp.substr(0,117);
 
-    vector<string> pat = produce_sequences_outer_faster({"CTG","CCGCTG","CTG"},sequence.size());
-    cout << pat.size() << "\n";
+    //116 120 106 107
 
-    int best_score = -1;
-    int done = 0;
-    #pragma omp parallel for ordered
-    for(int i=0;i<pat.size();++i)
+    vector<vector<int> > cache0(temp.size()+1,vector<int>(seq.size()+1,UNCACHED));
+    int score0 = align_greedymatch_multithread(temp,seq,temp.size(),seq.size(),cache0);
+    cout << CALLS_DELETE_TESTVAR << " calls ogm\n";
+    CALLS_DELETE_TESTVAR = 0;
+
+    vector<vector<int> > cache1(temp.size()+1,vector<int>(seq.size()+1,UNCACHED));
+    int score1 = align_GAL_multithread(temp,seq,temp.size(),seq.size(),cache1);
+    cout << CALLS_DELETE_TESTVAR << " calls real\n";
+    CALLS_DELETE_TESTVAR = 0;
+
+    /*vector<vector<int> > cache2(temp.size()+1,vector<int>(seq.size()+1,UNCACHED));
+    int score2 = align_TEST(temp,seq,temp.size(),seq.size(),cache2);
+    cout << CALLS_DELETE_TESTVAR << " calls test\n";
+    cout << score0 << " " << score1 << " " << score2 << "\n";
+
+    for(int i=0;i<=temp.size();++i)
     {
-        string s = pat[i];
-        #pragma omp atomic
-        done += 1;
-
-        if(done % 1000==0)
-            cout << done << "\n";
-
-        vector<vector<int> > cache(s.size()+1,vector<int>(sequence.size()+1,UNCACHED));
-        int score = align_GAL_multithread(s,sequence,s.size(),sequence.size(),cache);
-        
-        #pragma omp critical
-        best_score = max(best_score,score);
-
-        if(score ==1097)
+        for(int k=0;k<=seq.size();++k)
         {
-            vector<int> params = template_pattern_parameters({"CTG","CCGCTG","CTG"},s);
-            cout << params[0] << " " << params[1] << " " << params[2] << "\n";
+            if(cache1[i][k] != cache2[i][k])
+            {
+                output << i << " " << k << " " << cache1[i][k] << " " << cache2[i][k] << "\n";
+            }
         }
     }
-
-    cout << best_score << "\n";
-
-	return 0;
     */
-    /*
-
-	vector<string> biopattern = {"CTG", "CCGCTG", "CTG"};
-	string sequence = "GCTGTTGCTGCTGCTTGCTGCTGCTTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCATGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCT";//GCTGCTGCTGCTGCTGTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGATGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCGCTGCCGCTGCCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCCGCTGCGCTGCGCTGCGCTGCCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCCGCTGCGCTGCGCTGCCGCTGCGCTGCCGCTGCCGCTGCGCTGCCGCTGCCGCAGCCGCTGCCGCTGCCGCTGCCGCTGCCGCTGCCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCCGCTGCTGCTGCT";
-	cin >> sequence;
-	vector<string> candidate_templates = produce_sequences_outer_faster(biopattern, sequence.size());
-	cerr << candidate_templates.size() << " candidates, sequence len " << sequence.size() << "\n";
-
-    int best = -1;
-    vector<int> params;
-
-    auto start = chrono::steady_clock::now();
-
-
-    int done = 0;
-    vector<vector<int> > res;
-    #pragma omp parallel for ordered
-    for(int i=0;i<candidate_templates.size();++i)
-    {
-        done++;
-        if(done%1000==0)
-            cerr << done << "\n";
-        vector<vector<int> >  cache(candidate_templates[i].size()+1,vector<int>(sequence.size()+1,UNCACHED));
-        int score = align_GAL_multithread(candidate_templates[i], sequence, candidate_templates[i].size(), sequence.size(), cache);
-        //cout << score << " " << template_pattern_parameters(biopattern,candidate_templates[i])[1] << "\n";
-        vector<int> tmp = template_pattern_parameters(biopattern, candidate_templates[i]);
-        tmp.push_back(score);
-        #pragma omp critical
-        res.push_back(tmp);
-    }
-
-    auto end = chrono::steady_clock::now();
-	
-    cerr << "Time sum for alignments: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms\n";
-   
-	for(int i=0;i<res.size();++i)
-    {
-        for(int k=0;k<res[i].size();++k)
-        {
-            if(k) cout << " ";
-            cout << res[i][k];
-        }
-        cout << "\n";
-    }
-
-    */
+    return 0;
 }
