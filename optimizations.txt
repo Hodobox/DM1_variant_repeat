@@ -17,26 +17,26 @@ Generic align function:
 We know the sequence/template arguments for the top-level align call
 and can score the corret template accordingly. Internal information is unnecessary
 
-- as C++ handles string operations differently, to maintain efficiency, we match the sequence-template
-pair from the right as opposed to the left; this way the strings required for a deeper recursive call
-are ones with the rightmost character removed from the sequence-template pair, which can be done in O(1)
-directly to the original strings, which can be passed by reference to the recursive call, and then returned
-back to original state in O(1). This way N recursive calls only take O(N) operations on the parameters.
+- we don't slice the strings within align, we just remember where each string is
+supposed to end in the current state and work with that character
 
 - instead of a (sequence, template) : result mapping, we utilize the fact that 
-(as all characters are removed from the right) the lengths of the sequence and template by itself uniquely identify the state
-of the DP, and so a [sequence size+1][template size+1] integer array can be used as the cache instead (with value being
+(as all characters are removed from the right) the lengths of the sequence and 
+template by itself uniquely identify the state
+of the DP, and so a [sequence size+1][template size+1] integer array can be used as 
+the cache instead (with value being
 best found alignment score)
 
 - instead of sorting the three results, a simple max() is way faster
+
+- all functions except original are multithreading-compatible
 
 Specific align functions:
 
 	align_original:
 		simply the original python rewritten to C++ along with all 'generic' optimisations
-		(test: align_original.txt)
 
-	align_original_greedy_match:
+	align_greedymatch_multithread:
 		if current character matches, return match result without even trying deletion or gap
 	 	reasoning:
 		let the strings be Tc Sc (some prefixes T,S and ending with the same character c)
@@ -54,7 +54,7 @@ Specific align functions:
 		this optimisation does not alter any scores compared to original in a randomized 20-vs-20 test
 		(test: align_original_greedy_match.txt)
 
-	align_get_at_least:
+	align_GAL_multithread:
 		we note that a significant number of searched states will be pointless, in that we obtain them by only making
 		terrible decisions (e.g. choosing gap every other step) and the computed values will be discarded in opposition to
 		solutions which went a 'sensible' route. We attempt to prune such branches from our recursive search.
@@ -86,33 +86,28 @@ Specific align functions:
 		The original optimization is however imperfect, 
 		and Hodobox doesn't know why the following test results are what they are:
 
-		test: align_GAL_best_score_optimistic.txt calculates a unnecessarily high (optimistic) estimate of the best
-		possible score obtainable from the state (template,sequence): match_score * minimum(template length, sequence length)
-		(i.e. what if every character matched, and the rest of the longer string was then simply discarded).
-		This produces a different result in the 20-vs-20 test compared to align_original, in that several (10-ish)
-		(template,sequence) pairs are given a score of exactly 1 less. This should be completely insignificant compared to the
-		usual 700-900 scores the pairs receive (and so shouldn't change even the result order), yet it is unclear how this arises.
+		setting the get-at-least value to an unrealistically high value 
+		(e.g. assuming the shorter string is matched perfectly and the rest
+		is discarded) sometimes gives results of ~1-2 points less.
 
-		test: align_GAL_best_score_realistic.txt calculates a realistic estimate of the best possible score:
-		match_score * minimum(template_length, sequence length) + maximum(gap_score, delete_score) * (difference in string sizes)
-		(i.e. every character matched, and the rest of the longer string was removed with the least-negative bad score)
-		This produces a difference in 1 or 2 points, for a significant portion of (template,sequence) pairs. As is, it should
-		still have no-or-insignificant effect on the resulting scores table, but the origin of this discrepancy is once again
-		unbeknownst to me (as unless there is a mistake in my logic, no state should be able to receive the score used in 
-		align_GAL_best_score_optimistic anyway)
+		setting it to a realistic value (shorter is matched, rest is gapped/deleted)
+		very often gives results of ~1-2 points less.
 
-		and finally, for some reason combining this optimization with greedy_match produces abysmal results 
-		(scores often drop by more than 20 points in a (template,sequence) pair). These optimizations should not
-		have any cross-effect on each other (one prunes the search space of pointless calls, one relies on the fact
-		that taking a match is always optimal) and yet it does, to a level where they can not be used together.
-		Which would be very nice, as on their own they both significantly decrease the runtime.
-		(test: align_GAL_greedy_match_BAD_RESULT.txt)
+		adding the greedy-match optimisation described above on top, decreases some of 
+		the results by ~1-2 points yet again.
+
+		align_gm_mt_opt:
+		stands for align_greedymatch_multithread_optimized.
+		WIP, will try and precalculate results for prefixes and suffixes first.
+
+
+deprecated:
 
 	align_get_at_least_short:
 		16bit integers are enough for all values, so tried if replacing ints by int16s will be an improvement 
 		(perhaps with caching).
 		Nope.
-		(test: align_get_at_least_short)
+		optimisation deprecated.
 
 	align_get_at_least_array:
 		instead of creating a brand-new  
@@ -120,8 +115,5 @@ Specific align functions:
 		for each (template,sequence) pair, a single global 2D array cached[1501][1501] is used.
 		for fast clearing between pairs, a 2D bool array is used to keep track of which states have been memoised,
 		and is memset before each top-level align. Surprisingly, there is a ~10% improvement compared to the vector version.
-		(test: align_get_at_least_array)
-
-	align_GAL_multithread:
-		what it sounds like. get_at_least with 'realistic' best_score_possible, with changes that enable parallelization
-		so it can be multithreaded.
+		
+		deprecated after multithreading was brought in

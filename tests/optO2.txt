@@ -1,0 +1,3 @@
+53593
+Time sum for alignments: 438699 milli sec
+Average time per alignment: 8185 micro sec

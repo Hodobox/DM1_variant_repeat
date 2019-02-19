@@ -74,7 +74,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
             #pragma omp critical
             cerr << sequences_complete << "/" << sequences.size() << "\n";
         }
-
+        
     }
 
     auto end = chrono::steady_clock::now();
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
     input.open(argv[1]);
     output.open(argv[2]);
 	srand(47);
-	test_seqs(1, 1000);
+	test_seqs(1, 100000);
     return 0;
 
     string seq = get_seq(0);

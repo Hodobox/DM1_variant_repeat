@@ -165,11 +165,11 @@ void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,ve
         }
     }
 
-    auto end = chrono::steady_clock::now();
+    //auto end = chrono::steady_clock::now();
 
-    cerr << "prefix calc: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " milli sec\n";
+    //cerr << "prefix calc: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " milli sec\n";
    
-   start = chrono::steady_clock::now();
+   //start = chrono::steady_clock::now();
 
    /* for(int i=0;i<=sequence.size();++i)
     {
@@ -186,6 +186,11 @@ void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,ve
         int prefixlen = pattern[0].size() * params[0];
         vector<int> sufparams = params;
         sufparams[0] = 0;
+
+        if(k%1000==0)
+        {
+            cerr << k << "/" << alignments_to_do << "\n";
+        }
         //cerr << params[0] << " " << params[1] << " " << params[2] << " " << prefixlen << "\n";
         string suffix = produce_specific(pattern,sufparams, templates[k].size() - prefixlen);
         vector<vector<int> > cache(suffix.size()+1,vector<int>(sequence.size()+1,UNCACHED));
@@ -197,7 +202,7 @@ void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,ve
         pair_scores.push_back(pairscore_element);
     }   
 
-    end = chrono::steady_clock::now();
+    auto end = chrono::steady_clock::now();
 
     cerr << "Average time per alignment: " << chrono::duration_cast<chrono::microseconds>(end - start).count() / (alignments_to_do) << " micro sec\n";
 
