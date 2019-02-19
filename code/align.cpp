@@ -245,10 +245,9 @@ int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsi
     // this breaks here - why?
     /*if(match_mismatch_score == match_score)
     {
-        cache[temp.size()][sequence.size()] = match_result;
+        cache[tempsize][seqsize] = match_result;
         return match_result;
     }*/
-    
 
     get_at_least = max(get_at_least, match_result);
 
