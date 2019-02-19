@@ -1,5 +1,3 @@
 improve align_gm_mt_opt
 make sure align_greedymatch coincides with align_original
 analyse why align_GAL_multithread returns slightly smaller values some of the time compared to align_original_greedymatch (and versus all sorts of its versions)
-rework template generation
-(current pro: exact length. con: ambigious {de/re}construction)

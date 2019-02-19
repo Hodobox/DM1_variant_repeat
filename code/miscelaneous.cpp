@@ -45,7 +45,7 @@ void rawdata_to_garbagefree()
 }
 
 // assumes temp is a contatenation of strings in pattern, e.g. pattern = ["A","B","C"] then temp is (A)n (B)m (C)l for some n,m,l
-vector<int> template_pattern_parameters(vector<string> pattern, string temp)
+vector<int> template_pattern_parameters(vector<string> pattern, string &temp)
 {
     vector<int> parameters(pattern.size(),0);
     int pat_index=0, temp_index = 0;

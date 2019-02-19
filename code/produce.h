@@ -8,10 +8,8 @@
 #include <iostream>
 using namespace std;
 
-vector<string> produce_sequences(vector<string> &pattern, int max_length, int outer_index,int inner_index,string &partial_result);
-vector<string> produce_sequences_outer(vector<string> pattern, int max_length);
-void produce_sequences_faster(vector<string> &pattern, int max_length, int outer_index,int inner_index,string &partial_result, vector<string> &result);
-vector<string> produce_sequences_outer_faster(vector<string> pattern, int max_length);
-string produce_specific(vector<string> pattern, vector<int> howmany, int length);
+//void produce_sequences_improved(vector<string> &pattern, int max_length, int outer_index,int inner_index,string &partial_result, vector<string> &result);
+vector<string> produce_sequences_improved_outer(vector<string> pattern,int cutoff_length);
+string produce_specific(vector<string> pattern, vector<int> howmany, int length = -1);
 
 #endif

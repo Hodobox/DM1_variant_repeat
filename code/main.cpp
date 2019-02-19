@@ -39,7 +39,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
     #pragma omp parallel for ordered
     for(int i=0;i<sequences.size();i++)
     {
-        vector<string> templates = produce_sequences_outer_faster(pattern, sequences[i].size());
+        vector<string> templates = produce_sequences_improved_outer(pattern, sequences[i].size());
         if(TESTING)
         {
             random_shuffle(templates.begin(),templates.end());
@@ -133,25 +133,23 @@ int main(int argc, char** argv)
     if(argc != 3)
     {
         cerr << "Usage: ./binary $input_path $output_path\n";
-        return 1;
+        if(!TESTING) return 1;
+        else cerr << "WARNING: INVALID ARGUMENTS\n";
     }
 
     if(TESTING)
     {
         cerr << "TESTING is set to true. For real full-data runs, set TESTING to false!\n";
     }
-    /*vector<vector<int> > ps;
-    string optseq = "AABBCC";
-    vector<string> temps = {"AAABBB","AABBCC","ABBCCC"};
-    align_gm_mt_opt_outer({"A","B","C"}, 0, optseq, temps, 3, ps);
 
-    return 0;*/
+    
+    return 0;
 
-    input.open(argv[1]);
+    /*input.open(argv[1]);
     output.open(argv[2]);
 	srand(47);
 	test_seqs(1, 100000);
-    return 0;
+    return 0;*/
 
     string seq = get_seq(0);
     string temp = produce_specific({"CTG","CCGCTG","CTG"}, {78, 142, 100}, 1386);
