@@ -58,7 +58,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
                 cerr << k << "/" << alignments_to_do << "\n";
             }
             vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
-            int score = align_GAL_multithread(templates[k],sequences[i], templates[k].size(), sequences[i].size(), cache);
+            int score = align_original(templates[k],sequences[i],cache);// templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
@@ -142,14 +142,11 @@ int main(int argc, char** argv)
         cerr << "TESTING is set to true. For real full-data runs, set TESTING to false!\n";
     }
 
-    
-    return 0;
-
-    /*input.open(argv[1]);
+    input.open(argv[1]);
     output.open(argv[2]);
 	srand(47);
 	test_seqs(1, 100000);
-    return 0;*/
+    return 0;
 
     string seq = get_seq(0);
     string temp = produce_specific({"CTG","CCGCTG","CTG"}, {78, 142, 100}, 1386);
