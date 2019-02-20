@@ -1,3 +1,6 @@
+original:
+Time sum for alignments: 6298201 milli sec
+Average time per alignment: 117519 micro sec
 GAL:
 Time sum for alignments: 138505 milli sec
 Average time per alignment: 2584 micro sec

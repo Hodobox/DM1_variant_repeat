@@ -57,8 +57,8 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
                 #pragma omp critical
                 cerr << k << "/" << alignments_to_do << "\n";
             }
-            vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
-            int score = align_original(templates[k],sequences[i],cache);// templates[k].size(), sequences[i].size(), cache);
+            vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
+            int score = align_original(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
