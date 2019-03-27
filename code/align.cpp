@@ -142,18 +142,16 @@ int align_gm_mt_opt(string &temp,string &sequence, int tempsize, int seqsize, ve
 }
 void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,vector<string> &templates,int alignments_to_do,vector<vector<int> > &pair_scores)
 {
-    //precompute prefixes
+    //precompute prefixes and suffixes
 
     auto start = chrono::steady_clock::now();
 
-    vector<vector<int> > prefixes(sequence.size()+1,vector<int>(sequence.size()+1,UNCACHED));
     string prefix = "";
     while(prefix.size() < sequence.size())
         prefix += pattern[0];
-
-    prefix = prefix.substr(0,sequence.size());
-
-    for(int prefixlen = 0; prefixlen <= sequence.size(); ++prefixlen)
+    vector<vector<int> > prefixes(prefix.size()+1,vector<int>(sequence.size()+1,UNCACHED));
+    
+    for(int prefixlen = 0; prefixlen <= prefix.size(); ++prefixlen)
     {
         //cerr << prefixlen << "/" << sequence.size() << " " << CALLS_DELETE_TESTVAR << "\n";
         vector<vector<int> > cache(prefixlen+1,vector<int>(sequence.size()+1,UNCACHED));
@@ -165,38 +163,69 @@ void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,ve
         }
     }
 
-    //auto end = chrono::steady_clock::now();
+    cerr << "pref done\n";
 
-    //cerr << "prefix calc: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " milli sec\n";
-   
-   //start = chrono::steady_clock::now();
+    string suffix = "";
+    while(suffix.size() < sequence.size())
+        suffix += pattern.back();
+    vector<vector<int> > suffixes(suffix.size()+1,vector<int>(sequence.size()+1,UNCACHED));
 
-   /* for(int i=0;i<=sequence.size();++i)
+    reverse(suffix.begin(),suffix.end());
+    string reversed_sequence = sequence;
+    reverse(reversed_sequence.begin(),reversed_sequence.end());
+    vector<string> reversed_pattern = pattern;
+    reverse(reversed_pattern.begin(),reversed_pattern.end());
+    for(string &s:reversed_pattern)
+        reverse(s.begin(),s.end());
+
+    for(int suffixlen = 0; suffixlen <= suffix.size(); ++ suffixlen)
     {
-        for(int k=0;k<=sequence.size();++k)
+        vector<vector<int> > cache(suffixlen+1,vector<int>(sequence.size()+1,UNCACHED));
+        for(int seqlen = 0; seqlen <= sequence.size(); ++seqlen)
         {
-            cerr << prefixes[i][k] << " ";
+            // TODO replace with bottom-up DP
+            suffixes[suffixlen][seqlen] = align_greedymatch_multithread(suffix, reversed_sequence, suffixlen, seqlen, cache);
         }
-        cerr << "\n";
-    }*/
+    }
+
+    cerr << "suff done\n";
 
     for(int k=0;k<alignments_to_do;++k)
     {
-        vector<int> params = template_pattern_parameters(pattern, templates[k]);
-        int prefixlen = pattern[0].size() * params[0];
-        vector<int> sufparams = params;
-        sufparams[0] = 0;
 
+        //only for testing 1 seq, otherwise we'll get trashhed
         if(k%1000==0)
         {
             cerr << k << "/" << alignments_to_do << "\n";
         }
-        //cerr << params[0] << " " << params[1] << " " << params[2] << " " << prefixlen << "\n";
-        string suffix = produce_specific(pattern,sufparams, templates[k].size() - prefixlen);
-        vector<vector<int> > cache(suffix.size()+1,vector<int>(sequence.size()+1,UNCACHED));
-        int score = align_gm_mt_opt(suffix,sequence, suffix.size(), sequence.size(), cache, prefixes, prefixlen);
+
+        vector<int> params = template_pattern_parameters(pattern, templates[k]);
+        int prefixlen = pattern[0].size() * params[0];
+        int suffixlen = pattern.back().size() * params.back();
+
         vector<int> pairscore_element = params;
         pairscore_element.push_back(index);
+        int score;
+
+        if(suffixlen > prefixlen)
+        {
+
+            vector<int> prefparams = params;
+            prefparams.back() = 0;
+            reverse(prefparams.begin(),prefparams.end());
+            string tempprefix = produce_specific(reversed_pattern,prefparams,templates[k].size() - suffixlen);
+            vector<vector<int> > cache(tempprefix.size()+1,vector<int>(reversed_sequence.size()+1, UNCACHED));
+            score = align_gm_mt_opt(tempprefix,reversed_sequence,tempprefix.size(), reversed_sequence.size(), cache, suffixes, suffixlen);
+        }
+        else
+        {
+            vector<int> sufparams = params;
+            sufparams[0] = 0;
+            string tempsuffix = produce_specific(pattern,sufparams, templates[k].size() - prefixlen);
+            vector<vector<int> > cache(tempsuffix.size()+1,vector<int>(sequence.size()+1,UNCACHED));
+            score = align_gm_mt_opt(tempsuffix,sequence, tempsuffix.size(), sequence.size(), cache, prefixes, prefixlen);
+        }
+
         pairscore_element.push_back(score);
         #pragma omp critical
         pair_scores.push_back(pairscore_element);
@@ -257,6 +286,62 @@ int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsi
     get_at_least = max(get_at_least, delete_result);
 
     score_seq = align_GAL_multithread(temp, sequence, tempsize-1, seqsize, cache,get_at_least - gap_score);
+    int gap_result = score_seq + gap_score;
+
+    int result = max(gap_result,max(match_result,delete_result));
+    cache[tempsize][seqsize] = result;
+    return result;
+}
+
+int align_GAL_gm(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, int get_at_least)
+{
+   //calls++;
+
+    // if one sequence is empty, we will have no choice but to gap/delete the rest
+    if(!tempsize)
+        return seqsize * deletion_score;
+    if(!seqsize)
+        return tempsize * gap_score;
+
+    // if we have computed the best alignment for template[0...current_size] , sequence[0....current_size], then return it
+    if(cache[tempsize][seqsize] != UNCACHED)
+        return cache[tempsize][seqsize];
+
+    // for the result of this recursive call to matter (improve the result for the caller)
+    // it would have to get at least get_at_least points
+    // in the best case, we match the entirety of the smaller string, and then gap/delete the leftover of the other
+    int best_score_possible = match_score * min(tempsize,seqsize) + max(deletion_score,gap_score) * abs(tempsize-seqsize);
+    if(best_score_possible < get_at_least)
+        return TERRIBLE_SCORE;
+
+    //CALLS_DELETE_TESTVAR++;
+    
+
+    char temp_tail = temp[tempsize-1];
+    char seq_tail = sequence[seqsize-1];
+
+    int match_mismatch_score = (temp_tail == seq_tail) ? match_score : mismatch_score;
+
+    int score_seq;
+
+    score_seq = align_GAL_gm(temp, sequence, tempsize-1,seqsize-1, cache, get_at_least - match_mismatch_score);
+    int match_result = score_seq + match_mismatch_score;
+    
+    // this breaks here - why?
+    if(match_mismatch_score == match_score)
+    {
+        cache[tempsize][seqsize] = match_result;
+        return match_result;
+    }
+
+    get_at_least = max(get_at_least, match_result);
+
+    score_seq = align_GAL_gm(temp, sequence, tempsize, seqsize-1, cache, get_at_least - deletion_score);
+    int delete_result = score_seq + deletion_score;
+
+    get_at_least = max(get_at_least, delete_result);
+
+    score_seq = align_GAL_gm(temp, sequence, tempsize-1, seqsize, cache,get_at_least - gap_score);
     int gap_result = score_seq + gap_score;
 
     int result = max(gap_result,max(match_result,delete_result));

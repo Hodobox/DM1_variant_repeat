@@ -93,10 +93,11 @@ Specific align functions:
 		setting it to a realistic value (shorter is matched, rest is gapped/deleted)
 		very often gives results of ~1-2 points less.
 
+	align_GAL_gm:
 		adding the greedy-match optimisation described above on top, decreases some of 
 		the results by ~1-2 points yet again.
 
-		align_gm_mt_opt:
+	align_gm_mt_opt:
 		stands for align_greedymatch_multithread_optimized.
 		WIP, will try and precalculate results for prefixes and suffixes first.
 

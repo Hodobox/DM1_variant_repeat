@@ -24,8 +24,9 @@ mismatch_score,
 match_score;
 
 int align_greedymatch_multithread(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache);
-int align_gm_mt_opt(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, vector<vector<int> >  &prefixes, int prefixlen);
+//int align_gm_mt_opt(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, vector<vector<int> >  &prefixes, int prefixlen);
 void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,vector<string> &templates,int alignments_to_do,vector<vector<int> > &pair_scores);
 int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, int get_at_least = TERRIBLE_SCORE);
 int align_original(string &temp,string &sequence, vector<vector<int> > &cache);
+int align_GAL_gm(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, int get_at_least = TERRIBLE_SCORE);
 #endif

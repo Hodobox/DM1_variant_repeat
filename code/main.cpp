@@ -48,9 +48,9 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         #pragma omp atomic
         alignments_done += alignments_to_do;
 
-        //align_gm_mt_opt_outer(pattern, i, sequences[i],templates,alignments_to_do,pair_scores);
-        //continue;
-        for(int k=0;k<alignments_to_do;++k)
+        align_gm_mt_opt_outer(pattern, i, sequences[i],templates,alignments_to_do,pair_scores);
+        continue;
+        /*for(int k=0;k<alignments_to_do;++k)
         {
             if(k % 1000 == 0)
             {
@@ -58,7 +58,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
                 cerr << k << "/" << alignments_to_do << "\n";
             }
             vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
-            int score = align_original(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
+            int score = align_GAL_gm(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
@@ -73,7 +73,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         {
             #pragma omp critical
             cerr << sequences_complete << "/" << sequences.size() << "\n";
-        }
+        }*/
         
     }
 

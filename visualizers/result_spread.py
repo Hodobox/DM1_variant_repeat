@@ -32,7 +32,7 @@ with open(filename,'r') as data:
 
 points = list(sorted( [ (p,points[p])  for p in points ] ))
 plt.title(filename)
-plt.xlabel(param_name)
-plt.ylabel("# of best-scoring templates")
+plt.xlabel("max(" + param_name + ")-min(" + param_name + ") of best-scoring templates for a sequence")
+plt.ylabel("# of sequences with such spread")
 plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width)
 plt.show()

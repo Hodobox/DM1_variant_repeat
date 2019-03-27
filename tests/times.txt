@@ -1,9 +1,12 @@
 original:
 Time sum for alignments: 6298201 milli sec
 Average time per alignment: 117519 micro sec
+
 GAL:
 Time sum for alignments: 138505 milli sec
 Average time per alignment: 2584 micro sec
+Time sum for alignments: 133887 milli sec
+Average time per alignment: 2498 micro sec
 
 GM:
 Time sum for alignments: 855622 milli sec
@@ -13,6 +16,21 @@ GM opt:
 Time sum for alignments: 435545 milli sec
 Average time per alignment: 8126 micro sec
 
+GM opt v2:
+Time sum for alignments: 294816 milli sec
+Average time per alignment: 5501 micro sec
+
+GM opt v3:
+Time sum for alignments: 303607 milli sec
+Average time per alignment: 5665 micro sec
 
 GAL+GM:
+Time sum for alignments: 67773 milli sec
+Average time per alignment: 1264 micro sec
+Time sum for alignments: 68897 milli sec
+Average time per alignment: 1285 micro sec
 
+GAL+opt:
+
+
+GAL+GM+opt:
