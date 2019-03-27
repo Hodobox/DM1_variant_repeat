@@ -1,0 +1,131 @@
+The problem we are trying to solve is 'for each (error-prone) sequence, what was the actual variant repeat?'
+To do this, we generate all possible variant repeats, ('templates'), and score each of them against the sequence.
+The best-scoring templates are then the 'candidates' for the original sequence.
+
+All align functions have a single purpose - given two strings, a 'sequence' and a 'template', score them, i.e.
+enumerate how well the two strings align with each other.
+
+The scoring function for a sequence S[0..n-1] with characters S[0] up to S[n-1]
+and a template T[0..m-1] with characters T[0] up to T[m-1] is defined as follows:
+
+1. the score of (empty string, T[0..m-1]) or (S[0..m-1], empty string) has a score of -m
+(or more precisely, gap_score*m in the first case, and deletion_score*m in the second case)
+2. the score of (S[0..n-1], T[0..m-1]) is the maximum of:
+    a) score of (S[0..n-2],T[0..m-2]) + match_score(S[n-1],T[n-1])
+        match score is 1 if the characters re the same, otherwise -1.
+    b) score of (S[0..n-2],T[0..m-1]) + delete_score
+    c) score of (S[0..n-1],T[0..m-2]) + gap_score
+
+All align functions make use of memoisation, that is once a score was calculated
+for some state (S[0..n-1],T[0..m-1]), it was stored,
+and upon needing to use that value again it is not recalculated, just retrieved from memory. The 'state' of the function is simply the remaining length of the sequence
+and template that we want to align.
+
+Align original thus has the following pseudocode.
+
+int align_original(string template, string sequence, int[][] cache):
+    
+    if the template is empty:
+        return score of sequence.size * deletion_score
+
+    if the sequence is empty:
+        return score of template.size * gap_score
+
+    if the value for (template,sequence) was calculated, i.e. cache[template.size][sequence.size] is not a default value:
+        return cache[template.size][sequence.size]
+
+    # now we need to try the three possibilities
+
+    # try matching
+    remove last character from template and sequence
+    match_score = 1 if the characters are the same, otherwise -1
+    score = align_original(template, sequence, cache) + match_score
+    put the last characters back in place
+
+    # try deleting from sequence
+    remove last character of the sequence
+    score = max(score, align_original(template,sequence,cache) + deletion_score)
+    put the last character of sequence back in place
+
+    # try deleting from template
+    remove last character from template
+    score = max(score, align_original(template,sequence,cache) + gap_score)
+    put the last character of template back in place
+
+    cache[template.size][sequence.size] = score
+    return score
+
+
+
+align_greedymatch_multithread has simply one additional step - if the last characters
+of the sequence and template match, we immediately store and return the result of 
+the match alignment. Particularly, before the # try deleting from sequence comment,
+there is
+
+if the last characters really matched:
+    cache[template.size][sequence.size] = score
+    return score
+
+
+align_GAL_multithread:
+
+the idea behind this optimisation is that the align algorithm is very blind,
+and often goes down very non-sensical paths, like deleting every other character.
+These paths get terrible scores which are pretty much thrown away at every stage
+when a more sensible path is taken from them.
+
+To avoid going down such silly paths, we give each call of align a minimum required score, called the GAL (get_at_least), with the following meaning:
+
+if you can not, even in the best circumstances, get GAL score, just give up - 
+even if you calculate an accurate score, which will be lower than GAL, and return it
+to your caller, it is of no use to the caller - he already has a bigger score, so yours
+would be thrown away.
+
+since this function is intended to be multithreaded, we do not alter the template
+and sequence themselves, instead we 'pretend' that we did and also pass the 
+'current' length of the template and sequence
+
+int align_greedymatch_multithread(string template, string sequence, int templatesize, string sequencesize, int[][] cache, int GAL):
+    
+    if tempsize is 0:
+        return sequencesize * deletion_score
+
+    if sequencesize is 0:
+        return templatesize * gap_score
+
+    if score for this state was calculated, i.e. cache[templatesize][sequencesize] is
+    not a default value:
+        return cache[templatesize][sequencesize]
+
+    best_possible_score = score if the entirety of the shorter string aligns with the other
+    in particular, that is minimum(templatesize, sequencesize) * match_score, plus
+    the cost of then having to gap/delete the remainder of the other string,
+    so + |templatesize - sequencesize| * (deletion_score or gap_score)
+
+    if best_score_possible < GAL:
+        return TERRIBLE_SCORE
+
+    # okay, none of that helped, so we have to try the three options
+    # notice that, for example, if our GAL is 10, and we match
+    # the last two characters to get +1 score, we only need the leftover
+    # strings to get a score of 9. If they dont match, and we thus receive -1
+    # score, the pair we have to align will need to get a score of 11 to make up for it
+    # so in general, we subtract the score of each operation from the GAL value to each call
+
+    # try matching
+    match_score = 1 if the current last characters are the same, otherwise -1
+    score = align_GAL_multithread(template, sequence, templatesize-1, sequencesize-1, cache, GAL - match_score)
+
+    # if this call gave us a big score, we are no longer interested in smaller ones
+    # so we want to update the GAL value to a bigger one if this happened
+    GAL = max(GAL, score)
+
+    # try deleting
+    score = max(score, align_GAL_multithread(template,sequence, templatesize, sequencesize-1, cache, GAL - deletion_score))
+    GAL = max(GAL, score)
+
+    # try gap-ing
+    score = max(score, align_GAL_multithread(template, sequence, templatesize-1, sequencesize, cache, GAL - gap_score))
+
+    cache[templatesize][sequencesize] = score
+    return score
