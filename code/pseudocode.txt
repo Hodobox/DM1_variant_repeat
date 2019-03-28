@@ -2,6 +2,41 @@ The problem we are trying to solve is 'for each (error-prone) sequence, what was
 To do this, we generate all possible variant repeats, ('templates'), and score each of them against the sequence.
 The best-scoring templates are then the 'candidates' for the original sequence.
 
+PRODUCE
+
+Each sequence gets produced a list of templates to be scored against it. 
+Each template is simply each part of the pattern (e.g. CTG, then CCGCTG, then CTG) repeated several times and concatenated.
+To make each template uniquely identifiable, the patterns themselves do not get chopped up (i.e. the template does not end with '...CT'),
+we just finish as soon as adding the last pattern onto the template end made it as long or longer than the sequence.
+
+We start with an empty string and considering the first pattern.
+We always have two options - either we add the currently considered pattern onto the current string, or we don't and instead move on to the next pattern.
+Once we realize the template is long enough, we store the result and stop this process.
+
+produce_templates_outer(string[] pattern, string sequence):
+    results = []
+    template = empty string
+
+    produce_templates_inner(pattern, 0 (current pattern), sequence, template (empty here), results)
+
+    results = unique elements of results (eliminate duplicates)
+    return results
+
+produce_templates_inner(pattern, current_pattern, sequence, template, results):
+    if template is at least as long as sequence:
+        store template in results
+        return
+
+    append pattern[ current_pattern ] to end of template
+    produce_templates_inner(pattern, current_pattern, sequence, template, results)
+    remove pattern[ current_pattern ] from end of template
+
+    if there is a pattern after current_pattern:
+        produce_templates_inner(pattern, current_pattern + 1, sequence, template, results)    
+
+
+ALIGN
+
 All align functions have a single purpose - given two strings, a 'sequence' and a 'template', score them, i.e.
 enumerate how well the two strings align with each other.
 
@@ -129,3 +164,19 @@ int align_greedymatch_multithread(string template, string sequence, int template
 
     cache[templatesize][sequencesize] = score
     return score
+
+MAIN:
+    in main, we open the input and output files from command line arguments.
+    test_seqs() then reads sequences from the input file, produces templates for each sequence as in PRODUCE,
+    for each (sequence, template) pair it calls an ALIGN function, and stores it in a list of results.
+
+    the list of results should (for ease of comparison's sake) be then sorted first by sequence number, then by the template parameters lexicographically
+    (so e.g. sequence 2 template (5,3,1) goes after sequence 1 template (6,3,1) and it goes after sequence 1 template (6,2,2) )
+
+    the output file should then contain one line for each scored pair, in format
+    sequence_number [template parameters] score
+
+    e.g.
+    1 6 2 2 30
+    1 6 3 1 31
+    2 5 3 1 47
