@@ -42,15 +42,16 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         vector<string> templates = produce_sequences_improved_outer(pattern, sequences[i].size());
         if(TESTING)
         {
+            srand(47);
             random_shuffle(templates.begin(),templates.end());
         }
         int alignments_to_do = min((int)templates.size(),test_against);
         #pragma omp atomic
         alignments_done += alignments_to_do;
 
-        align_gm_mt_opt_outer(pattern, i, sequences[i],templates,alignments_to_do,pair_scores);
-        continue;
-        /*for(int k=0;k<alignments_to_do;++k)
+        //align_gm_mt_opt_outer(pattern, i, sequences[i],templates,alignments_to_do,pair_scores);
+        //continue;
+        for(int k=0;k<alignments_to_do;++k)
         {
             if(k % 1000 == 0)
             {
@@ -58,12 +59,21 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
                 cerr << k << "/" << alignments_to_do << "\n";
             }
             vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
-            int score = align_GAL_gm(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
+            int score = align_greedymatch_multithread(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
             #pragma omp critical
             pair_scores.push_back(pairscore_element);
+            
+            /*vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
+            vector<vector<int> > GAL_cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,-TERRIBLE_SCORE));
+            int score = align_GAL_careful(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache, GAL_cache);
+            vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
+            pairscore_element.push_back(i);
+            pairscore_element.push_back(score);
+            #pragma omp critical
+            pair_scores.push_back(pairscore_element);*/
         }
 
         #pragma omp atomic
@@ -73,7 +83,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         {
             #pragma omp critical
             cerr << sequences_complete << "/" << sequences.size() << "\n";
-        }*/
+        }
         
     }
 
@@ -145,43 +155,11 @@ int main(int argc, char** argv)
     input.open(argv[1]);
     output.open(argv[2]);
 	srand(47);
-	test_seqs(1, 100000);
-    return 0;
+	test_seqs(10, 1000);
 
-    string seq = get_seq(0);
-    string temp = produce_specific({"CTG","CCGCTG","CTG"}, {78, 142, 100}, 1386);
+    //pair<string,string> ctrexample = find_counterexample();
 
-    
-    //seq = seq.substr(0,121);
-    //temp = temp.substr(0,117);
+    //analyze_counterexample(ctrexample.first, ctrexample.second);
 
-    //116 120 106 107
-
-    vector<vector<int> > cache0(temp.size()+1,vector<int>(seq.size()+1,UNCACHED));
-    int score0 = align_greedymatch_multithread(temp,seq,temp.size(),seq.size(),cache0);
-    cout << CALLS_DELETE_TESTVAR << " calls ogm\n";
-    CALLS_DELETE_TESTVAR = 0;
-
-    vector<vector<int> > cache1(temp.size()+1,vector<int>(seq.size()+1,UNCACHED));
-    int score1 = align_GAL_multithread(temp,seq,temp.size(),seq.size(),cache1);
-    cout << CALLS_DELETE_TESTVAR << " calls real\n";
-    CALLS_DELETE_TESTVAR = 0;
-
-    /*vector<vector<int> > cache2(temp.size()+1,vector<int>(seq.size()+1,UNCACHED));
-    int score2 = align_TEST(temp,seq,temp.size(),seq.size(),cache2);
-    cout << CALLS_DELETE_TESTVAR << " calls test\n";
-    cout << score0 << " " << score1 << " " << score2 << "\n";
-
-    for(int i=0;i<=temp.size();++i)
-    {
-        for(int k=0;k<=seq.size();++k)
-        {
-            if(cache1[i][k] != cache2[i][k])
-            {
-                output << i << " " << k << " " << cache1[i][k] << " " << cache2[i][k] << "\n";
-            }
-        }
-    }
-    */
     return 0;
 }
