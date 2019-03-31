@@ -1,5 +1,5 @@
 #include "align.h"
-int CALLS_DELETE_TESTVAR;
+long long CALLS_DELETE_TESTVAR;
 
 const int UNCACHED = -(1 << 15);
 // should be lower than maximum sequence length * 2
@@ -239,7 +239,7 @@ void align_gm_mt_opt_outer(vector<string> pattern,int index, string &sequence,ve
 
 int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, int get_at_least)
 {
-    cerr << tempsize << " " << seqsize << " GAL " << get_at_least << "\n";
+    //cerr << tempsize << " " << seqsize << " GAL " << get_at_least << "\n";
 
     // if one sequence is empty, we will have no choice but to gap/delete the rest
     if(!tempsize)
@@ -255,11 +255,11 @@ int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsi
     // it would have to get at least get_at_least points
     // in the best case, we match the entirety of the smaller string, and then gap/delete the leftover of the other
     int best_score_possible = match_score * min(tempsize,seqsize) + max(deletion_score,gap_score) * abs(tempsize-seqsize);
-    cerr << "BSP " << best_score_possible << "\n";
+    //cerr << "BSP " << best_score_possible << "\n";
     if(best_score_possible < get_at_least)
         return TERRIBLE_SCORE;
 
-    //CALLS_DELETE_TESTVAR++;
+    CALLS_DELETE_TESTVAR++;
     
 
     char temp_tail = temp[tempsize-1];
@@ -269,9 +269,9 @@ int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsi
 
     int score_seq;
 
-    cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize-1 << " wants " << get_at_least - match_mismatch_score << "\n";
+    //cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize-1 << " wants " << get_at_least - match_mismatch_score << "\n";
     score_seq = align_GAL_multithread(temp, sequence, tempsize-1,seqsize-1, cache, get_at_least - match_mismatch_score);
-    cerr << tempsize << " " << seqsize << " gets " << score_seq << "\n";
+    //cerr << tempsize << " " << seqsize << " gets " << score_seq << "\n";
     int match_result = score_seq + match_mismatch_score;
     
     // this breaks here - why?
@@ -283,22 +283,22 @@ int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsi
 
     get_at_least = max(get_at_least, match_result);
 
-    cerr << tempsize << " " << seqsize << " tries " << tempsize << " " << seqsize-1 << " wants " << get_at_least - deletion_score << "\n";
+    //cerr << tempsize << " " << seqsize << " tries " << tempsize << " " << seqsize-1 << " wants " << get_at_least - deletion_score << "\n";
    
     score_seq = align_GAL_multithread(temp, sequence, tempsize, seqsize-1, cache, get_at_least - deletion_score);
-    cerr << tempsize << " " << seqsize << " gets " << score_seq << "\n";
+    //cerr << tempsize << " " << seqsize << " gets " << score_seq << "\n";
     int delete_result = score_seq + deletion_score;
 
     get_at_least = max(get_at_least, delete_result);
-    cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize << " wants " << get_at_least - gap_score << "\n";
+    //cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize << " wants " << get_at_least - gap_score << "\n";
    
     score_seq = align_GAL_multithread(temp, sequence, tempsize-1, seqsize, cache,get_at_least - gap_score);
     int gap_result = score_seq + gap_score;
-    cerr << tempsize << " " << seqsize << " gets " << score_seq << "\n";
+    //cerr << tempsize << " " << seqsize << " gets " << score_seq << "\n";
 
     int result = max(gap_result,max(match_result,delete_result));
     cache[tempsize][seqsize] = result;
-    cerr << tempsize << " " << seqsize << " = " << result << "\n";
+    //cerr << tempsize << " " << seqsize << " = " << result << "\n";
     return result;
 }
 
@@ -385,7 +385,7 @@ int align_GAL_careful(string &temp, string &sequence, int tempsize, int seqsize,
 
     GAL_cache[tempsize][seqsize] = min(GAL_cache[tempsize][seqsize], get_at_least);
 
-    //CALLS_DELETE_TESTVAR++;
+    CALLS_DELETE_TESTVAR++;
 
    // if(CALLS_DELETE_TESTVAR % 1000 == 0)
     //    cerr << CALLS_DELETE_TESTVAR << " calls\n";
@@ -414,6 +414,79 @@ int align_GAL_careful(string &temp, string &sequence, int tempsize, int seqsize,
     //cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize << " wants " << get_at_least - gap_score << "\n";
    
     score_seq = align_GAL_careful(temp, sequence, tempsize-1, seqsize, cache,GAL_cache, get_at_least - gap_score);
+    int gap_result = score_seq + gap_score;
+    //cerr << tempsize << " " << seqsize << " gets " << score_seq << " (+" << gap_score << ")\n";
+
+
+    int result = max(gap_result,max(match_result,delete_result));
+    cache[tempsize][seqsize] = result;
+   // cerr << tempsize << " " << seqsize << " " <<  get_at_least << " = " << result << "\n";
+    
+    return result;
+}
+
+int align_GAL_careful_gm(string &temp, string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, vector<vector<int> > &GAL_cache, int get_at_least)
+{
+
+    //cerr << tempsize << " " << seqsize << " GAL " << get_at_least << " cached " <<  GAL_cache[tempsize][seqsize] << "\n";
+
+    if(!tempsize)
+        return seqsize * deletion_score;
+    if(!seqsize)
+        return tempsize * gap_score;
+
+    // if we have computed the best alignment for template[0...current_size] , sequence[0....current_size], then return it
+    if(cache[tempsize][seqsize] != UNCACHED && GAL_cache[tempsize][seqsize] <= get_at_least) 
+        return cache[tempsize][seqsize];
+
+    // for the result of this recursive call to matter (improve the result for the caller)
+    // it would have to get at least get_at_least points
+    // in the best case, we match the entirety of the smaller string, and then gap/delete the leftover of the other
+    int best_score_possible = match_score * min(tempsize,seqsize) + max(deletion_score,gap_score) * abs(tempsize-seqsize);
+    //cerr << "BSP " << best_score_possible << "\n";
+    if(best_score_possible < get_at_least)
+    {
+        GAL_cache[tempsize][seqsize] = min(GAL_cache[tempsize][seqsize], get_at_least);
+        return TERRIBLE_SCORE;
+    }
+
+    GAL_cache[tempsize][seqsize] = min(GAL_cache[tempsize][seqsize], get_at_least);
+
+    CALLS_DELETE_TESTVAR++;
+
+   // if(CALLS_DELETE_TESTVAR % 1000 == 0)
+    //    cerr << CALLS_DELETE_TESTVAR << " calls\n";
+
+    char temp_tail = temp[tempsize-1];
+    char seq_tail = sequence[seqsize-1];
+
+    int match_mismatch_score = (temp_tail == seq_tail) ? match_score : mismatch_score;
+
+    int score_seq;
+    //cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize-1 << " wants " << get_at_least - match_mismatch_score << "\n";
+   
+    score_seq = align_GAL_careful_gm(temp, sequence, tempsize-1,seqsize-1, cache, GAL_cache, get_at_least - match_mismatch_score);
+    int match_result = score_seq + match_mismatch_score;
+    //cerr << tempsize << " " << seqsize << " gets " << score_seq << " (+" << match_mismatch_score << ")\n";
+
+    if(match_mismatch_score == match_score)
+    {
+        cache[tempsize][seqsize] = match_result;
+        return match_result;
+    }
+
+    get_at_least = max(get_at_least, match_result);
+
+    //cerr << tempsize << " " << seqsize << " tries " << tempsize << " " << seqsize-1 << " wants " << get_at_least - deletion_score << "\n";
+    score_seq = align_GAL_careful_gm(temp, sequence, tempsize, seqsize-1, cache, GAL_cache, get_at_least - deletion_score);
+    int delete_result = score_seq + deletion_score;
+    get_at_least = max(get_at_least, delete_result);
+    //cerr << tempsize << " " << seqsize << " gets " << score_seq << " (+" << deletion_score << ")\n";
+
+
+    //cerr << tempsize << " " << seqsize << " tries " << tempsize-1 << " " << seqsize << " wants " << get_at_least - gap_score << "\n";
+   
+    score_seq = align_GAL_careful_gm(temp, sequence, tempsize-1, seqsize, cache,GAL_cache, get_at_least - gap_score);
     int gap_result = score_seq + gap_score;
     //cerr << tempsize << " " << seqsize << " gets " << score_seq << " (+" << gap_score << ")\n";
 

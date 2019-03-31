@@ -42,7 +42,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         vector<string> templates = produce_sequences_improved_outer(pattern, sequences[i].size());
         if(TESTING)
         {
-            srand(47);
+            //srand(47);
             random_shuffle(templates.begin(),templates.end());
         }
         int alignments_to_do = min((int)templates.size(),test_against);
@@ -58,22 +58,23 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
                 #pragma omp critical
                 cerr << k << "/" << alignments_to_do << "\n";
             }
-            vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
+            
+            /*vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
             int score = align_greedymatch_multithread(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
             #pragma omp critical
-            pair_scores.push_back(pairscore_element);
+            pair_scores.push_back(pairscore_element);*/
             
-            /*vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
+            vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
             vector<vector<int> > GAL_cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,-TERRIBLE_SCORE));
-            int score = align_GAL_careful(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache, GAL_cache);
+            int score = align_GAL_careful_gm(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache, GAL_cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
             #pragma omp critical
-            pair_scores.push_back(pairscore_element);*/
+            pair_scores.push_back(pairscore_element);
         }
 
         #pragma omp atomic
@@ -155,7 +156,8 @@ int main(int argc, char** argv)
     input.open(argv[1]);
     output.open(argv[2]);
 	srand(47);
-	test_seqs(10, 1000);
+	test_seqs(1, 100000);
+    cerr << CALLS_DELETE_TESTVAR << "\n";
 
     //pair<string,string> ctrexample = find_counterexample();
 

@@ -11,7 +11,7 @@
 #include <chrono>
 using namespace std;
 
-extern int CALLS_DELETE_TESTVAR;
+extern long long CALLS_DELETE_TESTVAR;
 
 extern const int UNCACHED;
 // should be lower than maximum sequence length * 2
@@ -30,4 +30,5 @@ int align_GAL_multithread(string &temp,string &sequence, int tempsize, int seqsi
 int align_original(string &temp,string &sequence, vector<vector<int> > &cache);
 int align_GAL_gm(string &temp,string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, int get_at_least = TERRIBLE_SCORE);
 int align_GAL_careful(string &temp, string &seq, int tempsize, int seqsize, vector<vector<int> > &cache, vector<vector<int> > &GAL_cache, int get_at_least = TERRIBLE_SCORE);
+int align_GAL_careful_gm(string &temp, string &sequence, int tempsize, int seqsize, vector<vector<int> > &cache, vector<vector<int> > &GAL_cache, int get_at_least = TERRIBLE_SCORE);
 #endif
