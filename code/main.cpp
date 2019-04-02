@@ -67,9 +67,9 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
             #pragma omp critical
             pair_scores.push_back(pairscore_element);*/
             
-            vector<vector<int> > cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,UNCACHED));
-            vector<vector<int> > GAL_cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,-TERRIBLE_SCORE));
-            int score = align_GAL_careful_gm(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache, GAL_cache);
+            vector<vector<pair<int,int> > > cache(templates[k].size()+1,vector<pair<int,int> >(sequences[i].size()+1,{UNCACHED,-TERRIBLE_SCORE}));
+            //vector<vector<int> > GAL_cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,-TERRIBLE_SCORE));
+            int score = align_GAL_careful_pair(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
