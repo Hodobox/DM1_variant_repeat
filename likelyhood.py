@@ -1,5 +1,5 @@
 # probability that, for any given character, it is not (in our sequence) what it actually was in reality
-THREAT = 0.1
+PHRED = 0.1
 
 # all characters we care about
 ALPHABET = 'ACTG'
@@ -15,10 +15,10 @@ OCCURENCE = {
 
 # how likely it is that our sequence starts off with any given character
 START = {
-    'A':THREAT/3,
-    'C':1-THREAT,
-    'T':THREAT/3,
-    'G':THREAT/3,
+    'A':PHRED/3,
+    'C':1-PHRED,
+    'T':PHRED/3,
+    'G':PHRED/3,
 }
 
 # if no errors existed, how likely it is that [after character X][there will be character Y]
@@ -41,7 +41,7 @@ def init(model):
     global OCCURENCE
     for x in ALPHABET:
         OCCURENCE[x] = sum([1 if c is x else 0 for c in model]) / len(model)
-        START[x] = 1-THREAT if x == model[0] else THREAT/3
+        START[x] = 1-PHRED if x == model[0] else PHRED/3
 
     model += model[0]
 
@@ -72,8 +72,8 @@ def init(model):
 def P_Error(X):
     result = 0
     for originally_there in ALPHABET:
-        result += OCCURENCE[originally_there] * THREAT * ERROR_SUBSTITUTIONS_DEST[originally_there][X]
-    result = result / (result + OCCURENCE[X] * (1-THREAT)) 
+        result += OCCURENCE[originally_there] * PHRED * ERROR_SUBSTITUTIONS_DEST[originally_there][X]
+    result = result / (result + OCCURENCE[X] * (1-PHRED)) 
     return result
 
 # probability that, given that no errors took place, X occured after Y
@@ -85,11 +85,11 @@ def P_X_given_RealY(X, Y):
     result = 0
    
     # one option is that no error occured, and X simply occured after Y:
-    result += (1-THREAT) * P_RealX_given_RealY(X, Y)
+    result += (1-PHRED) * P_RealX_given_RealY(X, Y)
 
     # the other option is that an error occured, and X was supposed to be something else:
     for originally_there in ALPHABET:
-        result += THREAT * ERROR_SUBSTITUTIONS_DEST[originally_there][X] * P_RealX_given_RealY(originally_there, Y)
+        result += PHRED * ERROR_SUBSTITUTIONS_DEST[originally_there][X] * P_RealX_given_RealY(originally_there, Y)
 
     return result
 
@@ -103,10 +103,10 @@ def P_X_given_Y(X, Y):
     # otherwise, probability that it was something different (but now we know for sure)
     whole_error = 0
     for originally_there in ALPHABET:
-        whole_error += OCCURENCE[originally_there] * THREAT * ERROR_SUBSTITUTIONS_DEST[originally_there][Y]
+        whole_error += OCCURENCE[originally_there] * ERROR_SUBSTITUTIONS_DEST[originally_there][Y]
 
     for originally_there in ALPHABET:
-        result += P_Error(Y) * ( (OCCURENCE[originally_there] * THREAT * ERROR_SUBSTITUTIONS_DEST[originally_there][Y]) / whole_error ) * P_X_given_RealY(X, originally_there)
+        result += P_Error(Y) * ( (OCCURENCE[originally_there] * ERROR_SUBSTITUTIONS_DEST[originally_there][Y]) / whole_error ) * P_X_given_RealY(X, originally_there)
 
     return result
 
@@ -120,11 +120,11 @@ for X in 'ACTG':
 
 assert P_Error('A') == 1
 
-assert equal(P_Error('C'),(THREAT * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C'])) / (THREAT * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C']) + OCCURENCE['C'] * (1-THREAT)) )
+assert equal(P_Error('C'),(PHRED * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C'])) / (PHRED * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C']) + OCCURENCE['C'] * (1-PHRED)) )
 
-assert equal(P_X_given_RealY('A','C'), THREAT * ERROR_SUBSTITUTIONS_DEST['T']['A'] )
+assert equal(P_X_given_RealY('A','C'), PHRED * ERROR_SUBSTITUTIONS_DEST['T']['A'] )
 
-assert equal(P_X_given_Y('A','A'), (M_NO_ERROR['C']['T'] * THREAT * ERROR_SUBSTITUTIONS_DEST['T']['A']) )
+assert equal(P_X_given_Y('A','A'), (M_NO_ERROR['C']['T'] * PHRED * ERROR_SUBSTITUTIONS_DEST['T']['A']) )
 
 
 init('CTG')
@@ -135,11 +135,11 @@ for X in 'ACTG':
 
 assert P_Error('A') == 1
 
-assert equal(P_Error('C'),(THREAT * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C'])) / (THREAT * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C']) + OCCURENCE['C'] * (1-THREAT)) )
+assert equal(P_Error('C'),(PHRED * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C'])) / (PHRED * (OCCURENCE['T'] * ERROR_SUBSTITUTIONS_DEST['T']['C'] + OCCURENCE['G'] * ERROR_SUBSTITUTIONS_DEST['G']['C']) + OCCURENCE['C'] * (1-PHRED)) )
 
-assert equal(P_X_given_RealY('A','C'), THREAT * ERROR_SUBSTITUTIONS_DEST['T']['A'] )
+assert equal(P_X_given_RealY('A','C'), PHRED * ERROR_SUBSTITUTIONS_DEST['T']['A'] )
 
-assert equal(P_X_given_Y('A','A'), (M_NO_ERROR['C']['T'] * THREAT * ERROR_SUBSTITUTIONS_DEST['T']['A']) )
+assert equal(P_X_given_Y('A','A'), (M_NO_ERROR['C']['T'] * PHRED * ERROR_SUBSTITUTIONS_DEST['T']['A']) )
 
 
 
