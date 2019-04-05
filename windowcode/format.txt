@@ -1,0 +1,14 @@
+The format for output files of window analysis is:
+
+A header line, for humans to read. Not of use for computers.
+
+Then the number of repeat sizes analyzed (e.g. 3 for repeat sizes 3,6,9)
+Then follow descriptions of analyses for each repeat size.
+
+Each starts with a line containing repeat size length, followed by number of sequences analyzed, and window size.
+Then follow analyses of each sequence.
+
+For each sequence, first the number of repeat_size-tides found.
+Then follow descriptions of each repeat_size-tide.
+On one line, the repeat itself and the number of occurences.
+Then a line containing space-separated comma-separated pairs: position in sequence where window started, and number of observations.

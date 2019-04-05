@@ -8,36 +8,6 @@ const bool TESTING = true;
 ifstream input;
 ofstream output;
 
-vector<string> readfile()
-{
-    int n;
-    input >> n;
-    vector<string> res(n);
-    for(int i=0;i<n;++i)
-        input >> res[i];
-    return res;
-}
-
-void outputdata(vector<map<string,vector<pair<int,int> > > >data)
-{
-    output << data.size() << "\n";
-    for(int i=0;i<data.size();++i)
-    {
-        output << data[i].size() << "\n";
-        for(auto x : data[i])
-        {
-            output << x.first << "\n";
-            output << x.second.size() << "\n";
-            for(int i=0;i<x.second.size();++i)
-            {
-                if(i) output << " ";
-                output << x.second[i].first << "," << x.second[i].second;
-            }
-            output << "\n";
-        }
-    }
-}
-
 int main(int argc, char* argv[])
 {
     if(argc != 3)
@@ -46,13 +16,29 @@ int main(int argc, char* argv[])
         if(!TESTING) return 1;
     }
 
+    if(argc >= 2)
     input.open(argv[1]);
+    if(argc >= 3)
     output.open(argv[2]);
 
-    vector<string> sequences = readfile();
+    vector<string> sequences = readfile(input);
 
-    vector< map<string,vector<pair<int,int> > > > result = window(sequences, 20, 3);
+    //vector< map<string,vector<pair<int,int> > > > result = window(sequences, 20, 3);
 
-    outputdata(result);
+    // window multiple from 3 to 9, a1 -> a2
+    vector<pair< pair<int,int>, vector< map<string,vector<pair<int,int> > > > > > result = window_multiple(sequences, {3,9}, 18, 6);
+    outputdata(output, result, "repeats from 3 to 9, window size is 6 * repeat size");
+    input.close();
+    output.close();
 
+    // filter it, a2 -> a3
+    input.open(argv[2]);
+    output.open(argv[3]);
+    filter_window_data(input,output);
+    input.close(); output.close();
+
+    // print interesting from a3
+    input.open(argv[3]);
+    vector< pair< pair<int,int>, vector<map<string,vector<pair<int,int> > > > > > data = readdata(input);
+    print_interesting_repeats(data);
 }
