@@ -2,3 +2,4 @@ improve align_gm_mt_opt
 analyse why align_GAL_multithread returns slightly smaller values some of the time compared to align_original_greedymatch (and versus all sorts of its versions)
 make a GAL+opt
 add newest args to relevant visualisers
+biopython for PHRED
