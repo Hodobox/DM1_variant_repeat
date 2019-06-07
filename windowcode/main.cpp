@@ -10,9 +10,9 @@ ofstream output;
 
 int main(int argc, char* argv[])
 {
-    if(argc != 3)
+    if(argc != 4)
     {
-        cout << "Usage: ./bin $inputfile $outputfile\n";
+        cout << "Usage: ./bin $inputfile $datafile $filterfile\n";
         if(!TESTING) return 1;
     }
 

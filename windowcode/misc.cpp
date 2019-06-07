@@ -92,7 +92,7 @@ vector< pair< pair<int,int>, vector<map<string,vector<pair<int,int> > > > > > re
 
 bool interesting(int repeat_size, int window_size, vector<pair<int,int> > occurences)
 {
-    // prototype rough heuristic thing: a repeat is interesting if it covers at least 80% of its window 5 times in a row
+    // prototype rough heuristic thing: a repeat is interesting if it covers at least 90% of its window 4 times in a row
     double covers = 0.9*(window_size-repeat_size+1);
 
     for(int i=0;i+4<occurences.size();++i)

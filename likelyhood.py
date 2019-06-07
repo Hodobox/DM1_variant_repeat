@@ -114,9 +114,9 @@ def equal(A, B):
     #print(A, B)
     return abs(A-B) < 0.0000000001
 
-for X in 'ACTG':
-    for Y in 'ACTG':
-        print("P(" + X + "|" + Y + ") = " + str(P_X_given_Y(X,Y)))
+#for X in 'ACTG':
+#    for Y in 'ACTG':
+#        print("P(" + X + "|" + Y + ") = " + str(P_X_given_Y(X,Y)))
 
 assert P_Error('A') == 1
 
@@ -129,9 +129,9 @@ assert equal(P_X_given_Y('A','A'), (M_NO_ERROR['C']['T'] * PHRED * ERROR_SUBSTIT
 
 init('CTG')
 
-for X in 'ACTG':
-    for Y in 'ACTG':
-        print("P(" + X + "|" + Y + ") = " + str(P_X_given_Y(X,Y)))
+#for X in 'ACTG':
+#    for Y in 'ACTG':
+#        print("P(" + X + "|" + Y + ") = " + str(P_X_given_Y(X,Y)))
 
 assert P_Error('A') == 1
 
