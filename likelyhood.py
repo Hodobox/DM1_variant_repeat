@@ -129,9 +129,9 @@ assert equal(P_X_given_Y('A','A'), (M_NO_ERROR['C']['T'] * PHRED * ERROR_SUBSTIT
 
 init('CTG')
 
-#for X in 'ACTG':
-#    for Y in 'ACTG':
-#        print("P(" + X + "|" + Y + ") = " + str(P_X_given_Y(X,Y)))
+for X in 'ACTG':
+    for Y in 'ACTG':
+        print("P(" + X + "|" + Y + ") = " + str(P_X_given_Y(X,Y)))
 
 assert P_Error('A') == 1
 
@@ -153,7 +153,7 @@ for i in range(len(seq)-1):
 
 print(probability,'CTG')
 
-init('CAG')
+init('CCGCTG')
 
 probability = START[seq[0]]
 

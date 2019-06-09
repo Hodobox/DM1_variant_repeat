@@ -1,3 +1,5 @@
+from equations import P_X_given_Y_statekeep
+
 class State:
     def __init__(self, model, transitionProb, PHRED=0.1, ALPHABET='ACTG'):
         self.phred = PHRED
@@ -37,3 +39,12 @@ class State:
                     total_count += self.M_NO_ERROR[x][y]
                 for y in self.alphabet:
                     self.M_NO_ERROR[x][y] /= total_count
+
+
+        # first order probability matrix
+
+        self.P_X_Y = {}
+        for x in self.alphabet:
+            self.P_X_Y[x] = {}
+            for y in self.alphabet:
+                self.P_X_Y[x][y] = P_X_given_Y_statekeep(self, x, y)

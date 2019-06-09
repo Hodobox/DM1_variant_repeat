@@ -19,11 +19,11 @@ class HMM:
         self.states = [ [ markovState() for _ in range(len(models))] for _ in range(seqlen)]
 
     def compute(self, sequence):
-        self.states[0][0].set(log(self.modelchain[0].start[sequence[0]]),-1)
+        self.states[0][0].set(log(self.modelchain[0].start[sequence[0]]),0)
         for idx in range(1,self.seqlen):
             for st in range(len(self.modelchain)):
                 # stay in same state
-                stepProb =  log(1 - self.modelchain[st].nextState) + log(P_X_given_Y_statekeep(self.modelchain[st],sequence[idx],sequence[idx-1]))
+                stepProb =  log(1 - self.modelchain[st].nextState) + log(self.modelchain[st].P_X_Y[ sequence[idx] ][ sequence[idx-1] ]) #log(P_X_given_Y_statekeep(self.modelchain[st],sequence[idx],sequence[idx-1]))
                 totalProb = stepProb + self.states[idx-1][st].value
                 if totalProb > self.states[idx][st].value:
                     self.states[idx][st].set(totalProb,st)
@@ -37,13 +37,12 @@ class HMM:
 
     def bestStateSeq(self):
 
-
         #for st in range(len(self.modelchain)):
         #    for idx in range(self.seqlen):
-        #        print(str(self.states[idx][st].value)+','+str(self.states[idx][st].modelsrc),end=' ')
+        #        print(str(self.states[idx][st].value)[:5]+','+str(self.states[idx][st].modelsrc),end=' ')
         #    print()
 
-        bestValue,bestState = -1,-1
+        bestValue,bestState = -(10**9),-1
 
         for i in range(len(self.modelchain)):
             if self.states[self.seqlen-1][i].value > bestValue:

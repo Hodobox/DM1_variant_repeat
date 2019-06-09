@@ -44,5 +44,5 @@ def P_X_given_Y_statekeep(modelstate, X, Y):
     return result
 
 def P_X_given_Y_stateswitch(firstState, secondState, X, Y):
-    return firstState.end[X] * secondState.start[Y];
+    return firstState.end[Y] * secondState.start[X];
 
