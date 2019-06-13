@@ -1,5 +1,5 @@
 A parsable list of attempted optimizations (resp. changes)
-(compared to original athttps://github.com/picrin/science_of_alignment/blob/master/variant_repeat_algorithm.ipynb)
+(compared to original at https://github.com/picrin/science_of_alignment/blob/master/variant_repeat_algorithm.ipynb)
 
 General:
 

@@ -3,3 +3,5 @@ __pycache__/*
 sequences/*
 outputs/*data.txt
 *bin
+*.jar
+Tablet/STAR*

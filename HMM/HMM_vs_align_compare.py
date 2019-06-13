@@ -70,9 +70,11 @@ for i in range(len(HMM_seq_params)):
             closest_length = HMM_lengths[i]-length
         length_div.append((i,closest_length))
 
+plt.ylim(-10,10)
 plt.title(filename)
 plt.xlabel(param_name)
-plt.ylabel("Deviance of HMM param from best-scoring align param")
-plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width)
-#plt.scatter([p[0] for p in length_div], [p[1] for p in length_div], s = point_width)
+#plt.ylabel("Deviation of HMM param from best-scoring align param")
+#plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width)
+plt.ylabel("Deviation of HMM sequence length from best-scoring align length")
+plt.scatter([p[0] for p in length_div], [p[1] for p in length_div], s = point_width)
 plt.show()
