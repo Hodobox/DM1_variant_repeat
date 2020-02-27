@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
     output.open(argv[2]);
 
     vector<string> sequences = readfile(input);
+    
 
     //vector< map<string,vector<pair<int,int> > > > result = window(sequences, 20, 3);
 

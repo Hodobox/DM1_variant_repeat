@@ -1,6 +1,6 @@
 import argparse
 
-ARGS = ['filename','alpha','param_displayed','X_limits','Y_limits','score_limits','param_name','point_width','matching_scales','square_plot','zero']
+ARGS = ['filename','alpha','param_displayed','X_limits','Y_limits','score_limits','param_name','point_width','matching_scales','square_plot','zero','adjust_length','triangles']
 param_names = ['(CTG)N','CCGCTG(M)','CTG(L)']
 
 def add_args(parser):
@@ -15,7 +15,9 @@ def add_args(parser):
     parser.add_argument('-S', '--square', dest='square_plot', action='store_true', help= 'if set, X and Y axis will have the same number of pixels')
     parser.add_argument('-X', '--X_limits', nargs = 2, type = int, help = 'set lower and upper bound for X values')
     parser.add_argument('-Y', '--Y_limits', nargs = 2, type = int, help = 'set lower and upper bound for Y values')
-   
+    parser.add_argument('-A', '--adjust_length', action = 'store_true', help = 'multiply progenitor lenghts by variant length')
+    parser.add_argument('-t', '--triangles', action = 'store_true', help = 'display CTG-variant-CTG relationships')
+
 def args_init():
     argparser = argparse.ArgumentParser()
     add_args(argparser)

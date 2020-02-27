@@ -3,8 +3,8 @@ from collections import defaultdict
 from args import args_init
 
 args = args_init()
-used_args = ['filename','param_displayed','param_name','point_width']
-filename,param_displayed,param_name,point_width = [ args[name] for name in used_args ]
+used_args = ['filename','param_displayed','param_name','point_width','X_limits']
+filename,param_displayed,param_name,point_width,Xlim = [ args[name] for name in used_args ]
 
 scorefile = input()
 
@@ -35,6 +35,9 @@ with open(scorefile,'r') as data:
     lines = [line.strip() for line in data.readlines()]
 
     numseq = int(lines[0])
+
+    print(numseq,len(HMM_lengths))
+
     curline = 1
     for i in range(numseq):
         score,num = [int(x) for x in lines[curline].split()]
@@ -53,28 +56,36 @@ with open(scorefile,'r') as data:
         align_seq_params.append(param_set)
         align_lengths.append(length_set)
 
-points = []
-length_div = []
+points = defaultdict(int)
+length_div = defaultdict(int)
 
 for i in range(len(HMM_seq_params)):
     closest_param = 1000
     for param in align_seq_params[i]:
         if abs(HMM_seq_params[i]-param) < closest_param:
             closest_param = HMM_seq_params[i]-param
-    points.append((i,closest_param))
+
+    if Xlim is None or (Xlim[0] <= closest_param and closest_param<= Xlim[1]):
+        points[closest_param] += 1
 
 
     closest_length = 1000
     for length in align_lengths[i]:
         if abs(HMM_lengths[i]-length) < closest_length:
             closest_length = HMM_lengths[i]-length
-        length_div.append((i,closest_length))
+    if Xlim is None or (Xlim[0] <= closest_length and closest_length <= Xlim[1]):
+        length_div[closest_length] += 1
 
-plt.ylim(-10,10)
+#print(length_div)
+
+#plt.ylim(-10,10)
 plt.title(filename)
-plt.xlabel(param_name)
-#plt.ylabel("Deviation of HMM param from best-scoring align param")
-#plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width)
-plt.ylabel("Deviation of HMM sequence length from best-scoring align length")
-plt.scatter([p[0] for p in length_div], [p[1] for p in length_div], s = point_width)
+plt.ylabel("Number of sequences")
+
+plt.xlabel(param_name + ': HMM output - closest align output')
+plt.bar([p for p in points], [points[p] for p in points])
+
+#plt.xlabel(param_name + ' HMM length - align length')
+#plt.scatter([p for p in length_div], [length_div[p] for p in length_div], s = point_width)
+
 plt.show()

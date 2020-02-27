@@ -1,0 +1,14 @@
+#place data files in directories
+for datafile in sequences/raw/* ; do if [ -f "$datafile" ]; then echo $datafile; fname=${datafile:14:400}; suf=${fname%.*}; mkdir sequences/raw/$suf; mv $datafile sequences/raw/$suf; fi; done
+
+#clean reference files
+for dir in sequences/raw/*; do rm $dir/*derived*; done
+
+#generate reference files
+for dir in sequences/raw/*.fastq*; do  for data in $dir/*; do python3 referencer.py $data; done; done
+
+#clean trimmed files
+for dir in sequences/raw/*; do rm $dir/*trimmed*; done
+
+#compute instability for all PHRED-adjusted HMM-scored files
+for dir in HMM/outputs/PHRED_adjusted/*.HMM.txt; do python3 HMM/outputs/somatic_instability_scorer.py $dir >> HMM/outputs/PHRED_adjusted/instability_scores.txt; done

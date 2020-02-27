@@ -1,0 +1,51 @@
+Introduction
+
+Myotonic dystrophy type 1 (DM1), a clinically highly variable autosomal dominant inherited disorder, affects individuals of both sexes and all ages (1). The mutation responsible for DM1 is the expansion of an unstable CTG trinucleotide repeat located in the 3′-untranslated region of the DMPK gene (2-4) and in the promoter of the downstream SIX5 gene (5). Affected DM1 patients present with expansions from 50 to up to several thousand repeats (4). Longer alleles are associated with a more severe form of the disease and an earlier age of onset (5–7). In patients, the rate of length change mutation at this locus approaches 100% in the germline (8) with a major expansion bias (6,9,10). This causes striking anticipation, where the age of onset typically decreases by 25–35 years per generation (11).
+
+In some individuals, the repeat array is interrupted by variant repeats such as CCG and CGG, stabilising the expansion and often leading to milder symptoms (12). The nature of these variant repeats, such as the magnitude of their somatic instability and their stabilising effect on the entire repeat array is an unexplored area.
+
+This project aims to look at existing PaCBio sequencing datasets and use statistical analysis to determine the properties of these variant repeats and the repeat expansions they belong to, in comparison to controls with pure CTG repeats with no variants. Computational methods will be formulated and implemented in order to conduct this analysis, attempting several approaches to determine effective strategies and to double-check the validity of the results. 
+
+Materials and methods
+
+PacBIO samples were obtained from 33 participants [FIXME link with data] of prior studies [FIXME source]. Each sample was first visualized to provide a better overview of what the dataset contained. For each participant, reference sequences were constructed by taking a prefix which matched a threshold portion of the sample (30%), to which N copies of the CTG trinucleotide were appended, for N a multiple of 150, until a length greater than the longest read was obtained. This set of reference sequences was then used as a [FIXME index?] and run through unpaired [FIXME exact aligner], converted to SAM with samtools, and viewed in Tablet with high contrast for mismatches, so that variants were visible against the background matches of CTG. Three examples are provided below, with a presentation in the technical annotation [FIXME link and text].
+
+<FIXME Control>
+
+<FIXME CCGCTG repeat>
+
+<FIXME pattern>
+
+Through this process it was determined that <FIXME> participant's data was unfit for the purposes of this project, either for malformed reads or reads too few in number [link to list].
+
+The initial problem 
+
+- mention Sarah’s and Gayle’s dataset. Emphasis on Sarah’s data which was used in their paper that sparked this project. 
+- describe familial relationships that we have
+- describe the process of obtaining usable SAM files for viewing, and show examples of important types of variants in the dataset (control CTG, variant repeat, variant pattern)
+- describe the initial problem (n,m,l parametrization). Basically insert the presentation. Will be updated to mention Barbara’s work once we have some results from her.
+- Sliding window - this was discussed in the proposal so deserves to be here. A few days of work on it should make it a finalized little package which could actually be used. 
+- HMM model (again, insert presentation). 
+- Measuring somatic instability (reference Don’s paper in which they dabbled in this)
+
+Results
+Show agreement between our scoring algorithm and Sarah’s hand-counting. Show the distributions and computational times achieved. 
+Show sliding window charts on that dataset, and runs on other datasets (contrast with our knowledge from SAM viewing)
+Some table with HMM results. Compare with scoring algorithm. Might be a good idea to implement PHRED scaling for this part.
+Show the charts for observed somatic instability, and the plot with CTG/CCGCTG-based instability vs. length (number of repeats, or length?). Triangles (numbering might be better?)
+
+Harper P.S.: Myotonic Dystrophy 2001 3rd edn London WB Saunders Co.
+Buxton J., Shelbourne P., Davies J., Jones C., Tongeren T.V., Aslanidis C., de Jong P., Jansen G., Anvret M., Riley B., et al.:  Detection of an unstable fragment of DNA specific to individuals with myotonic dystrophy. Nature 1992 355 547 548.
+Fu Y.H., Pizzuti A., Fenwick R.G., King J., Rajnarayan S., Dunne P.W., Dubel J., Nasser G.A., Ashizawa T.,  de Jong P .et al.: An unstable triplet repeat in a gene related to myotonic muscular dystrophy, Science 1992 255 1256 1258
+Brook J.D., McCurrach M.E., Harley H.G., Buckler A.J., Church D., Aburatani H., Hunter K., Stanton V.P., Thirion J.-P., Hudson T. et al.: Molecular basis of myotonic dystrophy: expansion of a trinucleotide (CTG) repeat at the 3′ end of a transcript encoding a protein kinase family member, Cell 1992 68 799 808
+Boucher C.A., King S.K., Carey N., Krahe R., Winchester C.L., Rahman S., Creavin T., Meghji P., Bailey M.E.S., Chartier F.L. et al.: A novel homeodomain-encoding gene is associated with a large CpG island interrupted by the myotonic dystrophy unstable (CTG)n repeat, Hum. Mol. Genet. 1995 4 1919 1925
+Hunter A. Tsilfidis C. Mettler G. Jacob P. Mahadevan M. Surh L. Korneluk R. The correlation of age of onset with CTG trinucleotide repeat amplification in myotonic dystrophy J. Med. Genet. 1992 29 774 779
+Harley H.G. Rundle S.A. MacMillan J.C. Myring J. Brook J.D. Crow S. Reardon W. Fenton I. Shaw D.J. Harper P.S. Size of the unstable CTG repeat sequence in relation to phenotype and parental transmission in myotonic dystrophy Am. J. Hum. Genet. 1993 52 1164 1174
+Redman J.B. Fenwick R.G. Fu Y.-H. Pizzuti A. Caskey C.T. Relationship between parental trinucleotide GCT repeat length and severity of myotonic dystrophy in offspring J. Am. Med. Assoc. 1993 269 1960 1965
+Monckton D.G. Wong L.J. Ashizawa T. Caskey C.T. Somatic mosaicism, germline expansions, germline reversions and intergenerational reductions in myotonic dystrophy males: small pool PCR analyses Hum. Mol. Genet. 1995 4 1 8
+
+Ashizawa T. Dubel J.R. Dunne P.W. Dunne C.J. Fu Y.-H. Pizzuti A. Caskey C.T. Boerwinkle E. Perryman M.B. Epstein H.F. et al. Anticipation in myotonic dystrophy. II. Complex relationships between clinical findings and structure of the GCT repeat Neurology 1992 42 1877 1883
+Lavedan C. Hofmann-Radvanyi H. Shelbourne P. Rabes J.-P. Duros C. Savoy D. Dehaupas I. Luce S. Johnson K. Junien C. Myotonic dystrophy: size- and sex-dependent dynamics of CTG meiotic instability, and somatic mosaicism Am. J. Hum. Genet. 1993 52 875 883
+Höweler C.J. Busch H.F.M. Geraedts J.P.M. Niermeijer M.F. Staal A. Anticipation in myotonic dystrophy: fact or fiction Brain 1989 112 779 797
+Cumming, Sarah A et al. “De novo repeat interruptions are associated with reduced somatic instability and mild or absent clinical features in myotonic dystrophy type 1.” European journal of human genetics : EJHG vol. 26,11 (2018): 1635-1647. doi:10.1038/s41431-018-0156-9 
+

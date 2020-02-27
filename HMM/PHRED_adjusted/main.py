@@ -11,13 +11,25 @@ if len(sys.argv) > 1:
 	assert( len(sys.argv) == 2+numrepeats )
 	repeats = sys.argv[2:]
 
+seqs = []
+phreds = []
+
 seqnum = int(input())
-print(seqnum)
+
 for i in range(seqnum):
-    seq = input()
+    seqs.append(input())
+    phreds.append(input())
+
+assert len(seqs) == len(phreds) 
+
+print(seqnum)
+
+for i in range(seqnum):
+    seq = seqs[i]
+    phred = phreds[i]
 
     markovmodel = HMM(repeats,'ACTG',len(seq))
-    markovmodel.compute(seq)
+    markovmodel.compute(seq,phred)
     stateSeq = markovmodel.bestStateSeq()
     
     nml = []

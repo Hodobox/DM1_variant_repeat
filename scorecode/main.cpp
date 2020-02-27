@@ -36,7 +36,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
 
     auto start = chrono::steady_clock::now();
     
-    #pragma omp parallel for ordered
+    //#pragma omp parallel for ordered
     for(int i=0;i<sequences.size();i++)
     {
         vector<string> templates = produce_sequences_improved_outer(pattern, sequences[i].size());
@@ -46,7 +46,7 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
             random_shuffle(templates.begin(),templates.end());
         }
         int alignments_to_do = min((int)templates.size(),test_against);
-        #pragma omp atomic
+        //#pragma omp atomic
         alignments_done += alignments_to_do;
 
         //align_gm_mt_opt_outer(pattern, i, sequences[i],templates,alignments_to_do,pair_scores);
@@ -55,34 +55,34 @@ void best_templates_from_raw_reads_time(vector<string> pattern, vector<string> &
         {
             if(k % 1000 == 0)
             {
-                #pragma omp critical
+                //#pragma omp critical
                 cerr << k << "/" << alignments_to_do << "\n";
             }
             
-            /*vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
+            vector<vector<int> > cache(templates[k].size()+1, vector<int>(sequences[i].size()+1, UNCACHED));
             int score = align_greedymatch_multithread(templates[k], sequences[i], templates[k].size(), sequences[i].size(), cache);
             vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
             pairscore_element.push_back(i);
             pairscore_element.push_back(score);
-            #pragma omp critical
-            pair_scores.push_back(pairscore_element);*/
-            
-            vector<vector<pair<int,int> > > cache(templates[k].size()+1,vector<pair<int,int> >(sequences[i].size()+1,{UNCACHED,-TERRIBLE_SCORE}));
-            //vector<vector<int> > GAL_cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,-TERRIBLE_SCORE));
-            int score = align_GAL_careful_pair(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache);
-            vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
-            pairscore_element.push_back(i);
-            pairscore_element.push_back(score);
-            #pragma omp critical
+            //#pragma omp critical
             pair_scores.push_back(pairscore_element);
+            
+            //vector<vector<pair<int,int> > > cache(templates[k].size()+1,vector<pair<int,int> >(sequences[i].size()+1,{UNCACHED,-TERRIBLE_SCORE}));
+            //vector<vector<int> > GAL_cache(templates[k].size()+1,vector<int>(sequences[i].size()+1,-TERRIBLE_SCORE));
+            //int score = align_GAL_careful_pair(templates[k],sequences[i],templates[k].size(),sequences[i].size(),cache);
+            //vector<int> pairscore_element = template_pattern_parameters(pattern,templates[k]);
+            //pairscore_element.push_back(i);
+            //pairscore_element.push_back(score);
+            //#pragma omp critical
+            //pair_scores.push_back(pairscore_element);
         }
 
-        #pragma omp atomic
+       // #pragma omp atomic
         sequences_complete += 1;
 
         if(sequences_complete%10 == 0) 
         {
-            #pragma omp critical
+           // #pragma omp critical
             cerr << sequences_complete << "/" << sequences.size() << "\n";
         }
         
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
     input.open(argv[1]);
     output.open(argv[2]);
 	srand(47);
-	test_seqs(1, 100000);
+	test_seqs(1, 1);
     cerr << CALLS_DELETE_TESTVAR << "\n";
 
     //pair<string,string> ctrexample = find_counterexample();

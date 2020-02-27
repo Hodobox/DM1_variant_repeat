@@ -1,0 +1,73 @@
+X15_222
+Middle variant CCGCTG, similar to DMGV14. Large left repeat, medium middle variant, short right repeat.
+
+GO1
+Very long reads; on right side, interrupted by CCGCCG hexamers followed by right CTG, both short compared to left CTG.
+Some contain CCGCTG instead, usually more spread out towards the middle.
+6 cascading CCG's form a recurring pattern on the rightmost side.
+
+GO2
+No N-amer variant repeat, but clear, repeated interruptions by CCG in the same place across reads, four times
+
+GO3
+What seems like a variant of CCGCTG is actually a very stable pattern of 14 CCGCTG interleaved with several CTGs at the same place across reads (1_1_4_4__2__1__1__)
+
+GO4
+similar to the above, although the variant is CCGCCG. The left part of the cascade is
+longer and might have mutable length, although only within some small margin (or it
+might be same length everywhere)
+
+GO5
+5-6 CCGCTG's on right hand side, again in a cascading fashion
+
+GO6
+few CCGCCG's on right side (3-5 maybe), but not particularly consistent, many reads don't contain it
+
+GO7
+Either a pattern with CCG separated by two CTG, or just CCGCTGCTG variant with some errors
+
+GO8
+slightly strange - many reads with ~14 CCGCTG, many reads with nothing, many with ~8 CCGCTG (patterns). Same reads mapped multiple times, or just similar reads mapped
+arbitrarily slightly better for different length genomes?
+
+GO9
+seems like usual CCGCTG variants on the right, although a non-negligible part of them seem to have an expansion of CCGCTG in the middle of the read instead
+
+GO10
+broken, upon inspection referencer only made a size 4 anchor, though the actual flank seems quite okay. Re-run referencer with lower threshold.
+
+GO11
+No variants, except one or two A's present (a single or double CAGCTG?)
+
+GO12
+two CCGCTG expansions, one in the middle and one on the right. Need to confirm what % of reads have double, single, or no expanions. Spicy.
+
+X4_14C
+Long CCGCTG expansion
+
+X8_15C
+Short CCGCTGCTG expansion
+
+X9_182C
+Very few reads, most seem to have no expansion, a few have a short CCG trimer variant
+
+X11_UC56
+CCGCTG variant, but with many bases marked * with 'A inserted' or 'G-A inserted'?
+
+X12_110
+CCGCTG covers vast majority of read, out-covers CTG expansion
+
+X12_54B
+No variant, can't see anything which doesn't strike me as just random errors in CTG
+
+X13_111
+CCGCTG covers vast majority of read, many bases marked * with 'G-GG', 'G-GGA', 'G-GGGA' inserted?
+
+X13_184C
+??? seems like random error or something, maybe just lots of mosaicism
+
+X14_112
+Very long CCGCTG expansion
+
+X17_UC83
+CCGCTG expansion

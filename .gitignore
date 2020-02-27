@@ -5,3 +5,11 @@ outputs/*data.txt
 *bin
 *.jar
 Tablet/STAR*
+*.sam
+*outputs/*
+*tests/*
+Figures
+archive/*
+HMM/outputs
+align_convert_testrun.txt
+*.fa

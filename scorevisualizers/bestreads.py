@@ -3,7 +3,7 @@ from collections import defaultdict
 from args import args_init
 
 args = args_init()
-used_args = ['filename','param_limits','param_displayed','param_name','point_width']
+used_args = ['filename','X_limits','param_displayed','param_name','point_width']
 filename,param_limits,param_displayed,param_name,point_width = [ args[name] for name in used_args ]
 
 points = defaultdict(int)
@@ -28,5 +28,5 @@ points = list(sorted( [ (p,points[p])  for p in points ] ))
 plt.title(filename)
 plt.xlabel(param_name)
 plt.ylabel("# of best-scoring templates")
-plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width)
+plt.scatter([p[0] for p in points], [p[1] for p in points], s = point_width, c = 'orange')
 plt.show()
